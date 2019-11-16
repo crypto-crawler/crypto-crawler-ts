@@ -8,10 +8,12 @@
 .travis.yml
 tsconfig.json
 
+dist/cli.d.ts
 src
 test
 .github
 .vscode
+.devcontainer
 
 **/*.spec.*
 coverage
