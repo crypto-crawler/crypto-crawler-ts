@@ -1,0 +1,17 @@
+{
+  "name": "Node.js",
+  "dockerFile": "Dockerfile",
+
+  // Use 'settings' to set *default* container specific settings.json values on container create.
+  // You can edit these settings after create using File > Preferences > Settings > Remote.
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+
+  // Specifies a command that should be run after the container has been created.
+  "postCreateCommand": "npm install",
+
+  // An array of extension IDs that specify the extensions to
+  // install inside the container when you first attach to it.
+  "extensions": ["shan.code-settings-sync"]
+}
