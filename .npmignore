@@ -9,7 +9,7 @@
 tsconfig.json
 
 dist/cli.d.ts
-dist/cli.d.map
+dist/cli.js.map
 src
 test
 .github
