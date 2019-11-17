@@ -16,7 +16,7 @@ let crawler;
 
 switch (argv.exchange) {
   case 'newdex':
-    crawler = new NewdexCrawler([CrawlType.ORDER_BOOK], ['EIDOS/EOS']);
+    crawler = new NewdexCrawler([CrawlType.ORDER_BOOK], ['EIDOS_EOS']);
     break;
   default:
     throw Error(`Unsupported exchange: ${argv.exchange}`);

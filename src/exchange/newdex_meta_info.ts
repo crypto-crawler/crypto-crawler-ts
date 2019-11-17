@@ -20,7 +20,7 @@ export default class NewdexMetaInfo extends ExchangeMetaInfoBase {
 
   protected channelToPair(channel: string): string {
     if (channel === 'depth.eidosonecoin-eidos-eos:5') {
-      return 'EIDOS/EOS';
+      return 'EIDOS_EOS';
     }
     return '';
   }
@@ -39,7 +39,7 @@ export default class NewdexMetaInfo extends ExchangeMetaInfoBase {
 
   public convertToRawPair(pair: string): string {
     const mapping: { [key: string]: string } = {
-      'EIDOS/EOS': 'eidosonecoin-eidos-eos',
+      EIDOS_EOS: 'eidosonecoin-eidos-eos',
     };
     return mapping[pair];
   }

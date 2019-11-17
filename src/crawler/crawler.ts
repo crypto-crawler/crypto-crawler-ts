@@ -19,14 +19,14 @@ export default abstract class Crawler {
 
   protected logger: Logger;
 
-  protected crawlTypes: Array<CrawlType>;
+  protected crawlTypes: CrawlType[];
 
   protected pairs: string[];
 
   constructor(
     exchangeMetaInfo: ExchangeMetaInfo,
-    crawlTypes: Array<CrawlType> = [CrawlType.ORDER_BOOK],
-    pairs: Array<string> = [],
+    crawlTypes: CrawlType[] = [CrawlType.ORDER_BOOK], // empty means all types
+    pairs: string[] = [], // empty means all pairs
     receiveMsgCallback: ReceiveMessageCallback = defaultReceiveMessageCallback,
   ) {
     this.exchangeMetaInfo = exchangeMetaInfo;
@@ -54,8 +54,8 @@ export default abstract class Crawler {
     return pair;
   }
 
-  protected getChannels(): Array<string> {
-    const result: Array<string> = [];
+  protected getChannels(): string[] {
+    const result: string[] = [];
     this.crawlTypes.forEach(crawlType => {
       this.pairs.forEach(pair => {
         const channel = this.exchangeMetaInfo.getChannel(crawlType, pair);
