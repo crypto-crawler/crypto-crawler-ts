@@ -8,9 +8,9 @@ import NewdexMetaInfo from '../exchange/newdex_meta_info';
 // API docs: https://github.com/newdex/api-docs
 export default class NewdexCrawler extends Crawler {
   constructor(
-    receiveMsgCallback: ReceiveMessageCallback,
     crawlTypes: Array<CrawlType> = [CrawlType.ORDER_BOOK],
     pairs: Array<string> = [],
+    receiveMsgCallback?: ReceiveMessageCallback,
   ) {
     super(new NewdexMetaInfo(), crawlTypes, pairs, receiveMsgCallback);
   }

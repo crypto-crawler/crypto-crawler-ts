@@ -7,6 +7,11 @@ import CrawlType from './crawl_type';
 
 export type ReceiveMessageCallback = (msg: Msg) => Promise<Boolean>;
 
+async function defaultReceiveMessageCallback(msg: Msg): Promise<Boolean> {
+  console.dir(msg); // eslint-disable-line no-console
+  return true;
+}
+
 export default abstract class Crawler {
   protected exchangeMetaInfo: ExchangeMetaInfo;
 
@@ -22,7 +27,7 @@ export default abstract class Crawler {
     exchangeMetaInfo: ExchangeMetaInfo,
     crawlTypes: Array<CrawlType> = [CrawlType.ORDER_BOOK],
     pairs: Array<string> = [],
-    receiveMsgCallback: ReceiveMessageCallback,
+    receiveMsgCallback: ReceiveMessageCallback = defaultReceiveMessageCallback,
   ) {
     this.exchangeMetaInfo = exchangeMetaInfo;
     this.crawlTypes = crawlTypes;
