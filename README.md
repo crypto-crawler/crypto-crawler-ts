@@ -5,7 +5,7 @@ Crypto Crawler
 ## How to use
 
 ```javascript
-const crptoCrawler = require('crypto-crawler');
+const cryptoCrawler = require('crypto-crawler');
 
 const crawler = new cryptoCrawler.NewdexCrawler();
 
