@@ -7,9 +7,14 @@ Crypto Crawler
 ```javascript
 const cryptoCrawler = require('crypto-crawler');
 
+function processMsgCallback(msg) {
+  console.dir(msg);
+}
+
 const crawler = new cryptoCrawler.NewdexCrawler(
   [cryptoCrawler.CrawlType.ORDER_BOOK],
   ['EIDOS_EOS'],
+  processMsgCallback,
 );
 
 crawler.start();

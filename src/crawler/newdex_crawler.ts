@@ -1,6 +1,6 @@
 import assert from 'assert';
 import WebSocket from 'ws';
-import Crawler, { ReceiveMessageCallback } from './crawler';
+import Crawler, { ProcessMessageCallback } from './crawler';
 import CrawlType from './crawl_type';
 import { OrderMsg, OrderBookMsg } from '../pojo/msg';
 import NewdexMetaInfo from '../exchange/newdex_meta_info';
@@ -10,9 +10,9 @@ export default class NewdexCrawler extends Crawler {
   constructor(
     crawlTypes: CrawlType[] = [CrawlType.ORDER_BOOK],
     pairs: string[] = [],
-    receiveMsgCallback?: ReceiveMessageCallback,
+    processMsgCallback?: ProcessMessageCallback,
   ) {
-    super(new NewdexMetaInfo(), crawlTypes, pairs, receiveMsgCallback);
+    super(new NewdexMetaInfo(), crawlTypes, pairs, processMsgCallback);
   }
 
   protected async crawl(): Promise<void> {
@@ -72,7 +72,7 @@ export default class NewdexCrawler extends Crawler {
               rawMsg.data.bids.forEach((text: string) => {
                 msg.bids.push(parseOrder(text));
               });
-              this.receiveMsgCallback(msg);
+              this.processMsgCallback(msg);
             } else {
               this.logger.warn(rawMsg);
             }

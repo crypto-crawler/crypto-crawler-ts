@@ -5,9 +5,9 @@ import createLogger from '../util/logger';
 import { ExchangeMetaInfo } from '../exchange/exchange_meta_info';
 import CrawlType from './crawl_type';
 
-export type ReceiveMessageCallback = (msg: Msg) => Promise<Boolean>;
+export type ProcessMessageCallback = (msg: Msg) => Promise<Boolean>;
 
-async function defaultReceiveMessageCallback(msg: Msg): Promise<Boolean> {
+async function defaultProcessMessageCallback(msg: Msg): Promise<Boolean> {
   console.dir(msg); // eslint-disable-line no-console
   return true;
 }
@@ -15,7 +15,7 @@ async function defaultReceiveMessageCallback(msg: Msg): Promise<Boolean> {
 export default abstract class Crawler {
   protected exchangeMetaInfo: ExchangeMetaInfo;
 
-  protected receiveMsgCallback: ReceiveMessageCallback;
+  protected processMsgCallback: ProcessMessageCallback;
 
   protected logger: Logger;
 
@@ -27,12 +27,12 @@ export default abstract class Crawler {
     exchangeMetaInfo: ExchangeMetaInfo,
     crawlTypes: CrawlType[] = [CrawlType.ORDER_BOOK], // empty means all types
     pairs: string[] = [], // empty means all pairs
-    receiveMsgCallback: ReceiveMessageCallback = defaultReceiveMessageCallback,
+    processMsgCallback: ProcessMessageCallback = defaultProcessMessageCallback,
   ) {
     this.exchangeMetaInfo = exchangeMetaInfo;
     this.crawlTypes = crawlTypes;
     this.pairs = pairs;
-    this.receiveMsgCallback = receiveMsgCallback;
+    this.processMsgCallback = processMsgCallback;
     this.logger = createLogger(exchangeMetaInfo.name);
   }
 
