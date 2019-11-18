@@ -1,7 +1,7 @@
 {
   "name": "crypto-crawler",
-  "version": "1.0.13",
-  "description": "Crawl orderbook and trade from crypto exchanges.",
+  "version": "1.0.14",
+  "description": "Crawl orderbook and trade messages from crypto exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "source": "src/index.ts",
@@ -18,8 +18,12 @@
     "url": "git+https://github.com/soulmachine/crypto-crawler.git"
   },
   "keywords": [
-    "typescript",
-    "CLI"
+    "Blockchain",
+    "Bitcoin",
+    "Ethereum",
+    "EOS",
+    "Crypto",
+    "Trade"
   ],
   "engines": {
     "node": ">=10"

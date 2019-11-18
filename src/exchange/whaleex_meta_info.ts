@@ -42,7 +42,6 @@ export default class WhaleExMetaInfo extends ExchangeMetaInfo {
       default:
         throw Error(`CrawlType ${crawlType} is not supported for ${this.name} yet`);
     }
-    return '';
   }
 
   public convertToStandardPair(rawPair: string): string {

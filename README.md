@@ -1,6 +1,6 @@
 # crypto-crawler
 
-Crypto Crawler
+Crawl orderbook and trade messages from crypto exchanges.
 
 ## How to use
 
