@@ -20,8 +20,14 @@ const crawler = new CryptoCrawler.NewdexCrawler(
 crawler.start();
 ```
 
-Test only,
+## Quickstart
 
 ```bash
 npx crypto-crawler --exchange newdex
+```
+
+## Help
+
+```bash
+npx crypto-crawler --help
 ```
