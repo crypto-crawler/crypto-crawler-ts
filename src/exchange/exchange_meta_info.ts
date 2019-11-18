@@ -1,25 +1,19 @@
+/* eslint-disable camelcase */
 import CrawlType from '../crawler/crawl_type';
 
-export interface ExchangeMetaInfo {
+// Ground truth of an exchange
+export default abstract class ExchangeMetaInfo {
   name: string;
-  websocketEndpoint: string;
-  restfulEndpoint: string;
 
-  getRawPairs(): Promise<Array<string>>;
-  getChannel(crawlType: CrawlType, pair: string): string;
-  convertToStandardPair(channel: string): string;
-  convertToRawPair(pair: string): string;
-}
-
-export default abstract class ExchangeMetaInfoBase implements ExchangeMetaInfo {
-  name: string;
+  docUrl: string;
 
   websocketEndpoint: string;
 
   restfulEndpoint: string;
 
-  constructor(name: string, websocketEndpoint: string, restfulEndpoint: string) {
+  constructor(name: string, docUrl: string, websocketEndpoint: string, restfulEndpoint: string) {
     this.name = name;
+    this.docUrl = docUrl;
     this.websocketEndpoint = websocketEndpoint;
     this.restfulEndpoint = restfulEndpoint;
   }

@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { BaseOrder } from 'coinbase-pro';
 
 /**
@@ -8,18 +7,22 @@ export interface Msg {
   exchange: string;
   channel: string; // original websocket channel
   pair: string; // normalized pair name, upper case, splited by /, e.g., BTC/USDT
-  createdAt: Date; // MongoDB
+  timestamp: number; // Unix timestamp, in milliseconds
   raw: string; // the original message
   [key: string]: any; // parsed from raw
 }
 
+// eslint-disable-next-line import/prefer-default-export
+export enum AskBid {
+  ASK = 'ASK',
+  BID = 'BID',
+}
+
 export interface TradeMsg extends Msg {
-  _id?: number;
   price: number;
-  size: number;
-  side: string;
-  timestamp: Date;
-  trade_id?: number;
+  quantity: number;
+  side: AskBid;
+  trade_id: number;
 }
 
 export interface OrderMsg extends Msg {
@@ -31,6 +34,7 @@ export interface OrderMsg extends Msg {
 export interface OrderBookMsg extends Msg {
   asks: Array<OrderMsg>;
   bids: Array<OrderMsg>;
+  full: boolean;
 }
 
 // Specific data types for different exchanges

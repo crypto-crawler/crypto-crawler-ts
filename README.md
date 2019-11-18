@@ -5,14 +5,14 @@ Crypto Crawler
 ## How to use
 
 ```javascript
-const cryptoCrawler = require('crypto-crawler');
+const CryptoCrawler = require('crypto-crawler');
 
 function processMsgCallback(msg) {
   console.dir(msg);
 }
 
-const crawler = new cryptoCrawler.NewdexCrawler(
-  [cryptoCrawler.CrawlType.ORDER_BOOK],
+const crawler = new CryptoCrawler.NewdexCrawler(
+  [CryptoCrawler.CrawlType.ORDER_BOOK],
   ['EIDOS_EOS'],
   processMsgCallback,
 );

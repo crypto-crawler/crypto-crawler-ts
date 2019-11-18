@@ -2,7 +2,7 @@ import WebSocket from 'ws';
 import { Logger } from 'winston';
 import { Msg } from '../pojo/msg';
 import createLogger from '../util/logger';
-import { ExchangeMetaInfo } from '../exchange/exchange_meta_info';
+import { ExchangeMetaInfo } from '../exchange';
 import CrawlType from './crawl_type';
 
 export type ProcessMessageCallback = (msg: Msg) => Promise<Boolean>;

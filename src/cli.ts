@@ -4,14 +4,14 @@ import yargs from 'yargs';
 import chalk from 'chalk';
 import figlet from 'figlet';
 
-import { NewdexCrawler, CrawlType } from './crawler';
+import { NewdexCrawler, WhaleExCrawler, CrawlType } from './crawler';
 
 const { argv } = yargs.options({
   exchange: {
-    choices: ['newdex', 'binance', 'huobi'],
+    choices: ['Newdex', 'WhaleEx', 'Binance', 'Huobi'],
     type: 'string',
     demandOption: true,
-    default: 'newdex',
+    default: 'Newdex',
   },
   crawl_type: {
     choices: ['ORDER_BOOK', 'TRADE', 'TICKER'],
@@ -34,8 +34,11 @@ const { exchange, crawl_type, pair } = argv;
 let crawler;
 
 switch (exchange) {
-  case 'newdex':
+  case 'Newdex':
     crawler = new NewdexCrawler([(CrawlType as any)[crawl_type]], [pair]);
+    break;
+  case 'WhaleEx':
+    crawler = new WhaleExCrawler([(CrawlType as any)[crawl_type]], [pair]);
     break;
   default:
     throw Error(`Unsupported exchange: ${argv.exchange}`);

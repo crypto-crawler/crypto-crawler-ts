@@ -5,7 +5,6 @@ import CrawlType from './crawl_type';
 import { OrderMsg, OrderBookMsg } from '../pojo/msg';
 import NewdexMetaInfo from '../exchange/newdex_meta_info';
 
-// API docs: https://github.com/newdex/api-docs
 export default class NewdexCrawler extends Crawler {
   constructor(
     crawlTypes: CrawlType[] = [CrawlType.ORDER_BOOK],
@@ -19,42 +18,56 @@ export default class NewdexCrawler extends Crawler {
     const websocket = new WebSocket(this.exchangeMetaInfo.websocketEndpoint);
     websocket.on('open', () => {
       websocket.send(JSON.stringify({ type: 'handshake', version: '1.4' }));
-      setInterval(() => {
-        websocket.send(JSON.stringify({ type: 'heartbeat' }));
-      }, 10000);
-
-      this.getChannels().forEach(channel => {
-        websocket.send(
-          JSON.stringify({
-            channel,
-            type: 'subscribe',
-          }),
-        );
-      });
     });
 
     Crawler.listenWebSocket(
       websocket,
       data => {
         const raw = data as string;
-        const rawMsg = JSON.parse(raw);
+        const rawMsg = JSON.parse(raw) as { type: string; [key: string]: any };
         switch (rawMsg.type) {
           case 'handshake': {
             this.logger.info('Handshake succeeded!');
+
+            this.getChannels().forEach(channel => {
+              websocket.send(
+                JSON.stringify({
+                  channel,
+                  type: 'subscribe',
+                }),
+              );
+            });
+
+            const handshakeData = rawMsg as {
+              type: string;
+              data: { version: number; heartbeat: { interval: number } };
+            };
+            setInterval(() => {
+              websocket.send(JSON.stringify({ type: 'heartbeat' }));
+            }, handshakeData.data.heartbeat.interval * 1000);
             break;
           }
           case 'push': {
             if (rawMsg.channel.startsWith('depth.')) {
-              const rawPair = rawMsg.channel.substring('depth.'.length, rawMsg.channel.length - 2);
+              const rawOrderBookMsg = rawMsg as {
+                type: string;
+                channel: string;
+                data: { asks: string[]; bids: string[]; full: number };
+              };
+              const rawPair = rawOrderBookMsg.channel.substring(
+                'depth.'.length,
+                rawOrderBookMsg.channel.length - 2,
+              );
 
               const msg = {
                 exchange: this.exchangeMetaInfo.name,
-                channel: rawMsg.channel,
+                channel: rawOrderBookMsg.channel,
                 pair: this.exchangeMetaInfo.convertToStandardPair(rawPair),
-                createdAt: new Date(),
+                timestamp: new Date().getTime(),
                 raw,
                 asks: [],
                 bids: [],
+                full: rawOrderBookMsg.data.full === 1,
               } as OrderBookMsg;
               const parseOrder = (text: string): OrderMsg => {
                 const arr = text.split(':');
@@ -66,10 +79,10 @@ export default class NewdexCrawler extends Crawler {
                 } as OrderMsg;
                 return orderMsg;
               };
-              rawMsg.data.asks.forEach((text: string) => {
+              rawOrderBookMsg.data.asks.forEach(text => {
                 msg.asks.push(parseOrder(text));
               });
-              rawMsg.data.bids.forEach((text: string) => {
+              rawOrderBookMsg.data.bids.forEach(text => {
                 msg.bids.push(parseOrder(text));
               });
               this.processMsgCallback(msg);
