@@ -1,9 +1,13 @@
 import assert from 'assert';
+import WebSocket from 'ws';
 import { Client, IFrame, Message } from '@stomp/stompjs';
 import Crawler, { ProcessMessageCallback } from './crawler';
 import CrawlType from './crawl_type';
 import { OrderMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import { WhaleExMetaInfo } from '../exchange';
+
+// see https://github.com/stomp-js/stompjs/issues/28
+Object.assign(global, { WebSocket });
 
 // API docs: https://github.com/WhaleEx/API
 export default class WhaleExCrawler extends Crawler {

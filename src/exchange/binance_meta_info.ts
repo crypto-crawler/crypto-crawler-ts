@@ -2,8 +2,24 @@ import assert from 'assert';
 import axios from 'axios';
 import ExchangeMetaInfo from './exchange_meta_info';
 import CrawlType from '../crawler/crawl_type';
+import convertToStandardPair from '../util/common';
 
 export default class BinanceMetaInfo extends ExchangeMetaInfo {
+  private static QUOTE_CURRENCIES = [
+    'BTC',
+    'ETH',
+    'USDT',
+    'BNB',
+    'TUSD',
+    'PAX',
+    'USDC',
+    'XRP',
+    'USDS',
+    'TRX',
+    'BUSD',
+    'NGN',
+  ];
+
   constructor() {
     super(
       'Binance',
@@ -22,14 +38,7 @@ export default class BinanceMetaInfo extends ExchangeMetaInfo {
       quoteAsset: string;
       [key: string]: any;
     }>;
-    const set = new Set<string>();
-    arr
-      .filter(x => x.symbol === 'TRADING')
-      .forEach(x => {
-        set.add(x.quoteAsset);
-      });
-    console.dir(set);
-    return arr.filter(x => x.symbol === 'TRADING').map(x => `${x.baseAsset}_${x.quoteAsset}`);
+    return arr.filter(x => x.status === 'TRADING').map(x => `${x.baseAsset}_${x.quoteAsset}`);
   }
 
   public getChannel(crawlType: CrawlType, pair: string): string {
@@ -45,10 +54,7 @@ export default class BinanceMetaInfo extends ExchangeMetaInfo {
   }
 
   public convertToStandardPair(rawPair: string): string {
-    if (rawPair.endsWith('USDT')) {
-      return `${rawPair.substring(0, rawPair.length - 4)}_USDT`;
-    }
-    return `${rawPair.substring(0, rawPair.length - 3)}_${rawPair.substring(rawPair.length - 3)}`;
+    return convertToStandardPair(rawPair, BinanceMetaInfo.QUOTE_CURRENCIES);
   }
 
   public convertToRawPair(pair: string): string {

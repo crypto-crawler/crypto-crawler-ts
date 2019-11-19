@@ -2,8 +2,11 @@ import assert from 'assert';
 import axios from 'axios';
 import ExchangeMetaInfo from './exchange_meta_info';
 import CrawlType from '../crawler/crawl_type';
+import convertToStandardPair from '../util/common';
 
 export default class WhaleExMetaInfo extends ExchangeMetaInfo {
+  private static QUOTE_CURRENCIES = ['EOS', 'USDT', 'BTC', 'PAX'];
+
   constructor() {
     super(
       'WhaleEx',
@@ -45,14 +48,7 @@ export default class WhaleExMetaInfo extends ExchangeMetaInfo {
   }
 
   public convertToStandardPair(rawPair: string): string {
-    const QUOTE_CURRENCIES = ['EOS', 'USDT', 'BTC', 'PAX'];
-    for (let i = 0; i < QUOTE_CURRENCIES.length; i += 1) {
-      const quoteCurrency = QUOTE_CURRENCIES[i];
-      if (rawPair.endsWith(quoteCurrency)) {
-        return `${rawPair.substring(0, rawPair.length - quoteCurrency.length)}_${quoteCurrency}`;
-      }
-    }
-    throw Error(`Unknown rawPair: ${rawPair}`);
+    return convertToStandardPair(rawPair, WhaleExMetaInfo.QUOTE_CURRENCIES);
   }
 
   public convertToRawPair(pair: string): string {
