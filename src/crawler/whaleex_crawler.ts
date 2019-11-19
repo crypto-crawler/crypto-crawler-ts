@@ -2,7 +2,7 @@ import assert from 'assert';
 import { Client, IFrame, Message } from '@stomp/stompjs';
 import Crawler, { ProcessMessageCallback } from './crawler';
 import CrawlType from './crawl_type';
-import { OrderMsg, OrderBookMsg, TradeMsg, AskBid } from '../pojo/msg';
+import { OrderMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import { WhaleExMetaInfo } from '../exchange';
 
 // API docs: https://github.com/WhaleEx/API
@@ -100,7 +100,7 @@ export default class WhaleExCrawler extends Crawler {
                   raw: message.body,
                   price: parseFloat(rawMsg.price),
                   quantity: parseFloat(rawMsg.quantity),
-                  side: rawMsg.bidAsk === 'A' ? AskBid.ASK : AskBid.BID,
+                  side: rawMsg.bidAsk === 'A',
                   trade_id: parseInt(rawMsg.tradeId, 10),
                 } as TradeMsg;
                 this.processMsgCallback(msg);

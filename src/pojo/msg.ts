@@ -12,16 +12,10 @@ export interface Msg {
   [key: string]: any; // parsed from raw
 }
 
-// eslint-disable-next-line import/prefer-default-export
-export enum AskBid {
-  ASK = 'ASK',
-  BID = 'BID',
-}
-
 export interface TradeMsg extends Msg {
   price: number;
   quantity: number;
-  side: AskBid;
+  side: boolean; // true, ask; false, bid
   trade_id: number;
 }
 

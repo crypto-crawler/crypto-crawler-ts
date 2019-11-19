@@ -4,7 +4,7 @@ import yargs from 'yargs';
 import chalk from 'chalk';
 import figlet from 'figlet';
 
-import { NewdexCrawler, WhaleExCrawler, CrawlType } from './crawler';
+import { BinanceCrawler, NewdexCrawler, WhaleExCrawler, CrawlType } from './crawler';
 
 const { argv } = yargs.options({
   exchange: {
@@ -34,6 +34,9 @@ const { exchange, crawl_type, pair } = argv;
 let crawler;
 
 switch (exchange) {
+  case 'Binance':
+    crawler = new BinanceCrawler([(CrawlType as any)[crawl_type]], [pair]);
+    break;
   case 'Newdex':
     crawler = new NewdexCrawler([(CrawlType as any)[crawl_type]], [pair]);
     break;

@@ -23,7 +23,7 @@ crawler.start();
 ## Quickstart
 
 ```bash
-npx crypto-crawler --exchange newdex
+npx crypto-crawler --exchange Newdex
 ```
 
 ## Help
