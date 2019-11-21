@@ -37,11 +37,10 @@ export default abstract class Crawler {
   }
 
   public async start() {
+    await this.exchangeMetaInfo.init();
+    // empty means all pairs
     if (this.pairs.length === 0) {
-      const rawPairs = await this.exchangeMetaInfo.getRawPairs();
-      rawPairs.forEach(rawPair => {
-        this.pairs.push(this.exchangeMetaInfo.convertToStandardPair(rawPair));
-      });
+      this.pairs = this.exchangeMetaInfo.getPairs();
     }
     this.logger.info(JSON.stringify(this.pairs));
 
@@ -49,10 +48,6 @@ export default abstract class Crawler {
   }
 
   protected abstract async crawl(): Promise<void>;
-
-  protected static pairToDbName(pair: string): string {
-    return pair;
-  }
 
   protected getChannels(): string[] {
     const result: string[] = [];

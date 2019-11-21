@@ -1,25 +1,9 @@
-import assert from 'assert';
 import axios from 'axios';
 import ExchangeMetaInfo from './exchange_meta_info';
 import CrawlType from '../crawler/crawl_type';
-import convertToStandardPair from '../util/common';
+import { RawPairInfo } from '../pojo';
 
 export default class BinanceMetaInfo extends ExchangeMetaInfo {
-  private static QUOTE_CURRENCIES = [
-    'BTC',
-    'ETH',
-    'USDT',
-    'BNB',
-    'TUSD',
-    'PAX',
-    'USDC',
-    'XRP',
-    'USDS',
-    'TRX',
-    'BUSD',
-    'NGN',
-  ];
-
   constructor() {
     super(
       'Binance',
@@ -29,20 +13,8 @@ export default class BinanceMetaInfo extends ExchangeMetaInfo {
     );
   }
 
-  public async getRawPairs(): Promise<Array<string>> {
-    const response = await axios.get(`${this.restfulEndpoint}/api/v3/exchangeInfo`);
-    const arr = response.data.symbols as Array<{
-      symbol: string;
-      status: string;
-      baseAsset: string;
-      quoteAsset: string;
-      [key: string]: any;
-    }>;
-    return arr.filter(x => x.status === 'TRADING').map(x => `${x.baseAsset}_${x.quoteAsset}`);
-  }
-
   public getChannel(crawlType: CrawlType, pair: string): string {
-    const rawPair = this.convertToRawPair(pair);
+    const rawPair = this.standardToRawPair.get(pair)!.toLowerCase();
     switch (crawlType) {
       case CrawlType.ORDER_BOOK:
         return `${rawPair}@depth`;
@@ -53,12 +25,19 @@ export default class BinanceMetaInfo extends ExchangeMetaInfo {
     }
   }
 
-  public convertToStandardPair(rawPair: string): string {
-    return convertToStandardPair(rawPair, BinanceMetaInfo.QUOTE_CURRENCIES);
+  protected async getRawPairsInfo(): Promise<RawPairInfo[]> {
+    const response = await axios.get(`${this.restfulEndpoint}/api/v3/exchangeInfo`);
+    const arr = response.data.symbols as Array<{
+      symbol: string;
+      status: string;
+      baseAsset: string;
+      quoteAsset: string;
+      [key: string]: any;
+    }>;
+    return arr.filter(x => x.status === 'TRADING');
   }
 
-  public convertToRawPair(pair: string): string {
-    assert.strictEqual(pair.includes('_'), true);
-    return pair.replace(/_/g, '').toLowerCase();
+  protected extractStandardPair(rawPair: RawPairInfo): string {
+    return `${rawPair.baseAsset}_${rawPair.quoteAsset}`;
   }
 }

@@ -20,7 +20,6 @@ const { argv } = yargs.options({
     default: 'ORDER_BOOK',
   },
   pair: {
-    choices: ['EIDOS_EOS', 'BTC_USDT', 'ETH_BTC'],
     type: 'string',
     demandOption: true,
     default: 'EIDOS_EOS',
