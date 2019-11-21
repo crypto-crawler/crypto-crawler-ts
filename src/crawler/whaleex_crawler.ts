@@ -1,13 +1,12 @@
 import assert from 'assert';
-import WebSocket from 'ws';
 import { Client, IFrame, Message } from '@stomp/stompjs';
 import Crawler, { ProcessMessageCallback } from './crawler';
 import CrawlType from './crawl_type';
 import { OrderMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import { WhaleExMetaInfo } from '../exchange';
 
-// see https://github.com/stomp-js/stompjs/issues/28
-Object.assign(global, { WebSocket });
+// see https://github.com/stomp-js/stompjs/issues/28#issuecomment-554984094
+Object.assign(global, { WebSocket: require('ws') }); // eslint-disable-line global-require
 
 // API docs: https://github.com/WhaleEx/API
 export default class WhaleExCrawler extends Crawler {
