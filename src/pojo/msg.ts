@@ -26,8 +26,8 @@ export interface OrderMsg extends Msg {
 }
 
 export interface OrderBookMsg extends Msg {
-  asks: Array<OrderMsg>;
-  bids: Array<OrderMsg>;
+  asks: Array<OrderMsg>; // sorted from smallest to largest
+  bids: Array<OrderMsg>; // sorted from largest to smallest
   full: boolean;
 }
 

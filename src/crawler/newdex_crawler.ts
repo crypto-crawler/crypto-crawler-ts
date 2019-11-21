@@ -79,7 +79,7 @@ export default class NewdexCrawler extends Crawler {
                 } as OrderMsg;
                 return orderMsg;
               };
-              rawOrderBookMsg.data.asks.forEach(text => {
+              rawOrderBookMsg.data.asks.reverse().forEach(text => {
                 msg.asks.push(parseOrder(text));
               });
               rawOrderBookMsg.data.bids.forEach(text => {
