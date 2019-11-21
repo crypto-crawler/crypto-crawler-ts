@@ -17,7 +17,7 @@ export default class WhaleExMetaInfo extends ExchangeMetaInfo {
     const rawPair = this.standardToRawPair.get(pair)!;
     switch (crawlType) {
       case CrawlType.ORDER_BOOK:
-        return `/${rawPair}@depth20`;
+        return `/${rawPair}@depth5`;
       case CrawlType.TRADE:
         return `/${rawPair}@trade`;
       default:
