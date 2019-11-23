@@ -1,5 +1,5 @@
 import axios from 'axios';
-import assert from 'assert';
+import { strict as assert } from 'assert';
 import ExchangeMetaInfo from './exchange_meta_info';
 import CrawlType from '../crawler/crawl_type';
 import { RawPairInfo } from '../pojo';
@@ -26,7 +26,9 @@ export default class NewdexMetaInfo extends ExchangeMetaInfo {
 
   protected async getRawPairsInfo(): Promise<RawPairInfo[]> {
     const response = await axios.get(`${this.restfulEndpoint}/common/symbols`);
-    assert.strictEqual(response.data.code, 200);
+    assert.equal(response.status, 200);
+    assert.equal(response.statusText, 'OK');
+    assert.equal(response.data.code, 200);
     const arr = response.data.data as Array<{
       id: number;
       symbol: string;

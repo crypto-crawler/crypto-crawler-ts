@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { strict as assert } from 'assert';
 import { Client, IFrame, Message } from '@stomp/stompjs';
 import Crawler, { ProcessMessageCallback } from './crawler';
 import CrawlType from './crawl_type';
@@ -39,8 +39,8 @@ export default class WhaleExCrawler extends Crawler {
         this.pairs.forEach(pair => {
           const channel = this.exchangeMetaInfo.getChannel(crawlType, pair);
           client.subscribe(channel, (message: Message) => {
-            assert.strictEqual(message.command, 'MESSAGE');
-            assert.strictEqual(channel, message.headers.destination);
+            assert.equal(message.command, 'MESSAGE');
+            assert.equal(channel, message.headers.destination);
             switch (crawlType) {
               case CrawlType.ORDER_BOOK: {
                 const rawMsg = JSON.parse(message.body) as {
@@ -51,7 +51,7 @@ export default class WhaleExCrawler extends Crawler {
                   bids: string[];
                   [key: string]: any;
                 };
-                assert.strictEqual(rawMsg.type, 'B');
+                assert.equal(rawMsg.type, 'B');
 
                 const msg = {
                   exchange: this.exchangeMetaInfo.name,
@@ -65,7 +65,7 @@ export default class WhaleExCrawler extends Crawler {
                 } as OrderBookMsg;
                 const parseOrder = (text: string): OrderMsg => {
                   const arr = text.split(':');
-                  assert.strictEqual(arr.length, 2);
+                  assert.equal(arr.length, 2);
                   const orderMsg = {
                     price: parseFloat(arr[0]),
                     quantity: parseFloat(arr[1]),
@@ -93,7 +93,7 @@ export default class WhaleExCrawler extends Crawler {
                   quantity: string;
                   bidAsk: string;
                 };
-                assert.strictEqual(rawMsg.type, 'T');
+                assert.equal(rawMsg.type, 'T');
 
                 const msg = {
                   exchange: this.exchangeMetaInfo.name,

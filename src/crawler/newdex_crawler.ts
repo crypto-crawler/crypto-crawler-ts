@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { strict as assert } from 'assert';
 import WebSocket from 'ws';
 import Crawler, { ProcessMessageCallback } from './crawler';
 import CrawlType from './crawl_type';
@@ -71,7 +71,7 @@ export default class NewdexCrawler extends Crawler {
               } as OrderBookMsg;
               const parseOrder = (text: string): OrderMsg => {
                 const arr = text.split(':');
-                assert.strictEqual(arr.length, 3);
+                assert.equal(arr.length, 3);
                 const orderMsg = {
                   price: parseFloat(arr[0]),
                   quantity: parseFloat(arr[1]),

@@ -31,3 +31,7 @@ npx crypto-crawler --exchange Newdex
 ```bash
 npx crypto-crawler --help
 ```
+
+## Related Projects
+
+- [crypto-order](https://www.npmjs.com/package/crypto-order), a library to place and cancel orders at crypto exchanges.

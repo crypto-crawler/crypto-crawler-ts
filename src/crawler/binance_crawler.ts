@@ -1,4 +1,4 @@
-import assert from 'assert';
+import { strict as assert } from 'assert';
 import WebSocket from 'ws';
 import Crawler, { ProcessMessageCallback } from './crawler';
 import CrawlType from './crawl_type';
@@ -16,7 +16,7 @@ export default class BinanceCrawler extends Crawler {
 
   protected async crawl(): Promise<void> {
     const channels = this.getChannels();
-    assert.strictEqual(channels.length > 0, true);
+    assert.ok(channels.length > 0);
     const websocketUrl = `${this.exchangeMetaInfo.websocketEndpoint}/stream?streams=${channels.join(
       '/',
     )}`;
@@ -37,7 +37,7 @@ export default class BinanceCrawler extends Crawler {
               b: Array<Array<string>>;
               a: Array<Array<string>>;
             };
-            assert.strictEqual(rawOrderbookMsg.e, 'depthUpdate');
+            assert.equal(rawOrderbookMsg.e, 'depthUpdate');
             const msg: OrderBookMsg = {
               exchange: this.exchangeMetaInfo.name,
               channel: rawMsg.stream,
@@ -49,7 +49,7 @@ export default class BinanceCrawler extends Crawler {
               full: false,
             };
             const parseOrder = (arr: Array<string>): OrderMsg => {
-              assert.strictEqual(arr.length, 2);
+              assert.equal(arr.length, 2);
               const orderMsg = {
                 price: parseFloat(arr[0]),
                 quantity: parseFloat(arr[1]),
@@ -81,7 +81,7 @@ export default class BinanceCrawler extends Crawler {
               m: boolean;
               M: boolean;
             };
-            assert.strictEqual(rawTradeMsg.e, 'trade');
+            assert.equal(rawTradeMsg.e, 'trade');
             const msg: TradeMsg = {
               exchange: this.exchangeMetaInfo.name,
               channel: rawMsg.stream,
@@ -106,7 +106,7 @@ export default class BinanceCrawler extends Crawler {
   }
 
   private static getCrawlType(channel: string) {
-    assert.strictEqual(channel.includes('@'), true);
+    assert.ok(channel.includes('@'));
     const suffix = channel.split('@')[1];
     let result: CrawlType;
     switch (suffix) {
