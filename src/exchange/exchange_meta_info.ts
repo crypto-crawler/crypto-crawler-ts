@@ -32,6 +32,13 @@ export default abstract class ExchangeMetaInfo {
     rawPairsInfo.forEach(rawPairInfo => {
       const pair = this.extractStandardPair(rawPairInfo);
       const rawPair = this.extractRawPair(rawPairInfo);
+      if (this.pairMap.has(pair)) {
+        // eslint-disable-next-line no-console
+        console.error(
+          `${rawPair} and ${this.pairMap.get(pair)?.rawPair} are duplicated, deleting both!`,
+        );
+        this.pairMap.delete(pair);
+      }
       this.pairMap.set(pair, rawPairInfo);
       this.standardToRawPair.set(pair, rawPair);
       this.rawToStandardPair.set(rawPair, pair);
