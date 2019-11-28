@@ -1,8 +1,13 @@
-export { default as CrawlType } from './crawl_type';
+import { Msg } from '../pojo/msg';
 
-export { default as Crawler } from './crawler';
-export * from './crawler';
+export const CHANNEL_TYPES = ['OrderBook', 'Trade', 'Ticker'] as const;
+export type ChannelType = typeof CHANNEL_TYPES[number];
 
-export { default as BinanceCrawler } from './binance_crawler';
-export { default as NewdexCrawler } from './newdex_crawler';
-export { default as WhaleExCrawler } from './whaleex_crawler';
+export const EXCHANGES = ['Binance', 'Newdex', 'WhaleEx'] as const;
+export type SupportedExchange = typeof EXCHANGES[number];
+
+export type ProcessMessageCallback = (msg: Msg) => Promise<Boolean>;
+export async function defaultProcessMessageCallback(msg: Msg): Promise<Boolean> {
+  console.dir(msg); // eslint-disable-line no-console
+  return true;
+}

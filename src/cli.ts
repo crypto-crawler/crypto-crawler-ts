@@ -1,23 +1,24 @@
 #!/usr/bin/env node
-/* eslint-disable no-console,camelcase */
+/* eslint-disable no-console */
 import yargs from 'yargs';
 import chalk from 'chalk';
 import figlet from 'figlet';
+import { ChannelType, EXCHANGES, CHANNEL_TYPES, SupportedExchange } from './crawler';
 
-import { BinanceCrawler, NewdexCrawler, WhaleExCrawler, CrawlType } from './crawler';
+import crawl from './index';
 
 const { argv } = yargs.options({
   exchange: {
-    choices: ['Newdex', 'WhaleEx', 'Binance', 'Huobi'],
+    choices: EXCHANGES,
     type: 'string',
     demandOption: true,
     default: 'Newdex',
   },
-  crawl_type: {
-    choices: ['ORDER_BOOK', 'TRADE', 'TICKER'],
+  channel_type: {
+    choices: CHANNEL_TYPES,
     type: 'string',
     demandOption: true,
-    default: 'ORDER_BOOK',
+    default: 'OrderBook',
   },
   pair: {
     type: 'string',
@@ -28,22 +29,8 @@ const { argv } = yargs.options({
 
 console.info(chalk.green(figlet.textSync('Crypto Crawler')));
 
-const { exchange, crawl_type, pair } = argv;
+const { exchange, channel_type, pair } = argv;
 
-let crawler;
-
-switch (exchange) {
-  case 'Binance':
-    crawler = new BinanceCrawler([(CrawlType as any)[crawl_type]], [pair]);
-    break;
-  case 'Newdex':
-    crawler = new NewdexCrawler([(CrawlType as any)[crawl_type]], [pair]);
-    break;
-  case 'WhaleEx':
-    crawler = new WhaleExCrawler([(CrawlType as any)[crawl_type]], [pair]);
-    break;
-  default:
-    throw Error(`Unsupported exchange: ${argv.exchange}`);
-}
-
-crawler.start();
+(async () => {
+  await crawl(exchange as SupportedExchange, [channel_type as ChannelType], [pair]);
+})();
