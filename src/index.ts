@@ -9,6 +9,7 @@ import crawlNewdex from './crawler/newdex';
 import crawlWhaleEx from './crawler/whaleex';
 
 export * from './pojo/msg';
+export { SupportedExchange, ChannelType, ProcessMessageCallback } from './crawler';
 
 /**
  * Crawl messages from a crypto exchange.
