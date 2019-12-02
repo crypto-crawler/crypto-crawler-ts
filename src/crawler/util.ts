@@ -38,10 +38,11 @@ export async function listenWebSocket(
   });
 }
 
-export function buildPairMap(pairs: PairInfo[]): Map<string, PairInfo> {
+export function buildPairMap(pairs: { [key: string]: PairInfo }): Map<string, PairInfo> {
   const result = new Map<string, PairInfo>();
-  pairs.forEach(p => {
-    result.set(p.raw_pair, p);
+  Object.keys(pairs).forEach(p => {
+    const pairInfo = pairs[p];
+    result.set(pairInfo.raw_pair, pairInfo);
   });
   return result;
 }

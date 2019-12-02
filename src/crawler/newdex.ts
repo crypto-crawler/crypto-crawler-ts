@@ -7,7 +7,7 @@ import { OrderMsg, OrderBookMsg } from '../pojo/msg';
 import { ChannelType, ProcessMessageCallback, defaultProcessMessageCallback } from './index';
 
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
-  const pairInfo = exchangeInfo.pairs.filter(p => p.normalized_pair === pair)[0] as NewdexPairInfo;
+  const pairInfo = exchangeInfo.pairs[pair] as NewdexPairInfo;
   switch (channeltype) {
     case 'OrderBook':
       return `depth.${pairInfo.pair_symbol}:${pairInfo.price_precision}`;
@@ -27,7 +27,7 @@ export default async function crawl(
   const pairMap = buildPairMap(exchangeInfo.pairs);
   // empty means all pairs
   if (pairs.length === 0) {
-    pairs = exchangeInfo.pairs.map(x => x.normalized_pair); // eslint-disable-line no-param-reassign
+    pairs = Object.keys(exchangeInfo.pairs); // eslint-disable-line no-param-reassign
   }
   logger.info(pairs);
 

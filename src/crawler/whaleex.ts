@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert';
-import getExchangeInfo, { ExchangeInfo, PairInfo } from 'exchange-info';
+import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import { Client, IFrame, Message } from '@stomp/stompjs';
 import { OrderMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import createLogger from '../util/logger';
@@ -9,7 +9,7 @@ import { ChannelType, ProcessMessageCallback, defaultProcessMessageCallback } fr
 Object.assign(global, { WebSocket: require('ws') }); // eslint-disable-line global-require
 
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
-  const pairInfo = exchangeInfo.pairs.filter(p => p.normalized_pair === pair)[0] as PairInfo;
+  const pairInfo = exchangeInfo.pairs[pair];
   switch (channeltype) {
     case 'OrderBook':
       return `/${pairInfo.raw_pair}@depth5`;
@@ -29,7 +29,7 @@ export default async function crawl(
   const exchangeInfo = await getExchangeInfo('WhaleEx');
   // empty means all pairs
   if (pairs.length === 0) {
-    pairs = exchangeInfo.pairs.map(x => x.normalized_pair); // eslint-disable-line no-param-reassign
+    pairs = Object.keys(exchangeInfo.pairs); // eslint-disable-line no-param-reassign
   }
   logger.info(pairs);
 

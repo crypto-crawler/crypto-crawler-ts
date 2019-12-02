@@ -1,13 +1,13 @@
 import { strict as assert } from 'assert';
 import WebSocket from 'ws';
-import getExchangeInfo, { ExchangeInfo, PairInfo } from 'exchange-info';
+import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import { listenWebSocket, getChannels, buildPairMap } from './util';
 import createLogger from '../util/logger';
 import { OrderMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import { ChannelType, ProcessMessageCallback, defaultProcessMessageCallback } from './index';
 
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
-  const pairInfo = exchangeInfo.pairs.filter(p => p.normalized_pair === pair)[0] as PairInfo;
+  const pairInfo = exchangeInfo.pairs[pair];
   const rawPair = pairInfo.raw_pair.toLowerCase();
   switch (channeltype) {
     case 'OrderBook':
@@ -47,7 +47,7 @@ export default async function crawl(
   const pairMap = buildPairMap(exchangeInfo.pairs);
   // empty means all pairs
   if (pairs.length === 0) {
-    pairs = exchangeInfo.pairs.map(x => x.normalized_pair); // eslint-disable-line no-param-reassign
+    pairs = Object.keys(exchangeInfo.pairs); // eslint-disable-line no-param-reassign
   }
   logger.info(pairs);
 
