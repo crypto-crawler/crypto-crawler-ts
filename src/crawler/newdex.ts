@@ -3,7 +3,7 @@ import WebSocket from 'ws';
 import getExchangeInfo, { ExchangeInfo, NewdexPairInfo } from 'exchange-info';
 import { listenWebSocket, getChannels, buildPairMap } from './util';
 import createLogger from '../util/logger';
-import { OrderMsg, OrderBookMsg } from '../pojo/msg';
+import { OrderItem, OrderBookMsg } from '../pojo/msg';
 import { ChannelType, ProcessMessageCallback, defaultProcessMessageCallback } from './index';
 
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
@@ -75,7 +75,7 @@ export default async function crawl(
               rawOrderBookMsg.channel.length - 2,
             );
 
-            const msg = {
+            const msg: OrderBookMsg = {
               exchange: exchangeInfo.name,
               channel: rawOrderBookMsg.channel,
               pair: pairMap.get(rawPair)!.normalized_pair,
@@ -84,16 +84,16 @@ export default async function crawl(
               asks: [],
               bids: [],
               full: rawOrderBookMsg.data.full === 1,
-            } as OrderBookMsg;
-            const parseOrder = (text: string): OrderMsg => {
+            };
+            const parseOrder = (text: string): OrderItem => {
               const arr = text.split(':');
               assert.equal(arr.length, 3);
-              const orderMsg = {
+              const orderItem: OrderItem = {
                 price: parseFloat(arr[0]),
                 quantity: parseFloat(arr[1]),
                 cost: parseFloat(arr[2]),
-              } as OrderMsg;
-              return orderMsg;
+              };
+              return orderItem;
             };
             rawOrderBookMsg.data.asks.reverse().forEach(text => {
               msg.asks.push(parseOrder(text));

@@ -19,15 +19,15 @@ export interface TradeMsg extends Msg {
   trade_id: number;
 }
 
-export interface OrderMsg extends Msg {
+export interface OrderItem {
   price: number;
   quantity: number;
   cost: number;
 }
 
 export interface OrderBookMsg extends Msg {
-  asks: Array<OrderMsg>; // sorted from smallest to largest
-  bids: Array<OrderMsg>; // sorted from largest to smallest
+  asks: Array<OrderItem>; // sorted from smallest to largest
+  bids: Array<OrderItem>; // sorted from largest to smallest
   full: boolean;
 }
 

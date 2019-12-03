@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import { Client, IFrame, Message } from '@stomp/stompjs';
-import { OrderMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
+import { OrderItem, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import createLogger from '../util/logger';
 import { ChannelType, ProcessMessageCallback, defaultProcessMessageCallback } from './index';
 
@@ -67,7 +67,7 @@ export default async function crawl(
               };
               assert.equal(rawMsg.type, 'B');
 
-              const msg = {
+              const msg: OrderBookMsg = {
                 exchange: exchangeInfo.name,
                 channel,
                 pair,
@@ -76,17 +76,17 @@ export default async function crawl(
                 asks: [],
                 bids: [],
                 full: true,
-              } as OrderBookMsg;
-              const parseOrder = (text: string): OrderMsg => {
+              };
+              const parseOrder = (text: string): OrderItem => {
                 const arr = text.split(':');
                 assert.equal(arr.length, 2);
-                const orderMsg = {
+                const orderItem: OrderItem = {
                   price: parseFloat(arr[0]),
                   quantity: parseFloat(arr[1]),
                   cost: 0,
-                } as OrderMsg;
-                orderMsg.cost = orderMsg.price * orderMsg.quantity;
-                return orderMsg;
+                };
+                orderItem.cost = orderItem.price * orderItem.quantity;
+                return orderItem;
               };
               rawMsg.asks.forEach((text: string) => {
                 msg.asks.push(parseOrder(text));

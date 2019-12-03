@@ -3,7 +3,7 @@ import WebSocket from 'ws';
 import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import { listenWebSocket, getChannels, buildPairMap } from './util';
 import createLogger from '../util/logger';
-import { OrderMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
+import { OrderItem, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import { ChannelType, ProcessMessageCallback, defaultProcessMessageCallback } from './index';
 
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
@@ -82,15 +82,15 @@ export default async function crawl(
             bids: [],
             full: false,
           };
-          const parseOrder = (arr: Array<string>): OrderMsg => {
+          const parseOrder = (arr: Array<string>): OrderItem => {
             assert.equal(arr.length, 2);
-            const orderMsg = {
+            const orderItem: OrderItem = {
               price: parseFloat(arr[0]),
               quantity: parseFloat(arr[1]),
               cost: 0,
-            } as OrderMsg;
-            orderMsg.cost = orderMsg.price * orderMsg.quantity;
-            return orderMsg;
+            };
+            orderItem.cost = orderItem.price * orderItem.quantity;
+            return orderItem;
           };
           rawOrderbookMsg.a.forEach((text: Array<string>) => {
             msg.asks.push(parseOrder(text));
