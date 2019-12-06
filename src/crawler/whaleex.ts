@@ -109,7 +109,7 @@ export default async function crawl(
               };
               assert.equal(rawMsg.type, 'T');
 
-              const msg = {
+              const msg: TradeMsg = {
                 exchange: exchangeInfo.name,
                 channel,
                 pair,
@@ -119,7 +119,7 @@ export default async function crawl(
                 quantity: parseFloat(rawMsg.quantity),
                 side: rawMsg.bidAsk === 'A',
                 trade_id: parseInt(rawMsg.tradeId, 10),
-              } as TradeMsg;
+              };
               processMsgCallback(msg);
               break;
             }
