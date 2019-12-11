@@ -27,6 +27,10 @@ export default async function crawl(
   pairs: string[] = [],
   processMsgCallback: ProcessMessageCallback = defaultProcessMessageCallback,
 ): Promise<void> {
+  if (pairs.length > 0) {
+    pairs = Array.from(new Set(pairs)); // eslint-disable-line no-param-reassign
+  }
+
   switch (exchange) {
     case 'Binance':
       return crawlBinance(channelTypes, pairs, processMsgCallback);
