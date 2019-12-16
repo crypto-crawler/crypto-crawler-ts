@@ -56,10 +56,6 @@ export default async function crawl(
   const websocket = new WebSocket(websocketUrl);
   websocket.on('open', () => {
     logger.info(`${websocket.url} connected`);
-    const events: Array<string> = [];
-    pairs.forEach(x => {
-      events.push(`{'event':'addChannel','channel':'ok_sub_spot_${x}_deals'}`);
-    });
     websocket.send(JSON.stringify({ op: 'subscribe', args: channels }));
   });
   websocket.on('message', data => {
