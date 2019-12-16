@@ -6,6 +6,8 @@ import createLogger from '../util/logger';
 import { OrderItem, OrderBookMsg, TradeMsg, BboMsg } from '../pojo/msg';
 import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
+const EXCHANGE_NAME = 'Binance';
+
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
   const pairInfo = exchangeInfo.pairs[pair];
   const rawPair = pairInfo.raw_pair.toLowerCase();
@@ -46,8 +48,8 @@ export default async function crawl(
   pairs: string[] = [],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const logger = createLogger('Binance');
-  const exchangeInfo = await getExchangeInfo('Binance');
+  const logger = createLogger(EXCHANGE_NAME);
+  const exchangeInfo = await getExchangeInfo(EXCHANGE_NAME);
   // raw_pair -> pairInfo
   const pairMap = buildPairMap(exchangeInfo.pairs);
   // empty means all pairs
@@ -120,12 +122,8 @@ export default async function crawl(
             orderItem.cost = orderItem.price * orderItem.quantity;
             return orderItem;
           };
-          rawOrderbookMsg.a.forEach((text: Array<string>) => {
-            msg.asks.push(parseOrder(text));
-          });
-          rawOrderbookMsg.b.forEach((text: Array<string>) => {
-            msg.bids.push(parseOrder(text));
-          });
+          msg.asks = rawOrderbookMsg.a.map((text: Array<string>) => parseOrder(text));
+          msg.bids = rawOrderbookMsg.b.map((text: Array<string>) => parseOrder(text));
           await msgCallback(msg);
           break;
         }
