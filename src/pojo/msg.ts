@@ -15,7 +15,7 @@ export interface TradeMsg extends Msg {
   price: number;
   quantity: number;
   side: boolean; // true, ask; false, bid
-  trade_id: number;
+  trade_id: string;
 }
 
 export interface OrderItem {

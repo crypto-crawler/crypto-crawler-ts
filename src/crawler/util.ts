@@ -1,7 +1,9 @@
 import WebSocket from 'ws';
 import { Logger } from 'winston';
-import { ExchangeInfo, PairInfo } from 'exchange-info';
+import getExchangeInfo, { ExchangeInfo, PairInfo, SupportedExchange } from 'exchange-info';
+
 import { ChannelType } from './index';
+import createLogger from '../util/logger';
 
 export function getChannels(
   channelTypes: ChannelType[],
@@ -45,4 +47,22 @@ export function buildPairMap(pairs: { [key: string]: PairInfo }): Map<string, Pa
     result.set(pairInfo.raw_pair, pairInfo);
   });
   return result;
+}
+
+export async function initBeforeCrawl(
+  exchange: SupportedExchange,
+  pairs: string[] = [],
+): Promise<[Logger, ExchangeInfo, Map<string, PairInfo>]> {
+  const logger = createLogger(exchange);
+  const exchangeInfo = await getExchangeInfo(exchange);
+  // raw_pair -> pairInfo
+  const pairMap = buildPairMap(exchangeInfo.pairs);
+  // empty means all pairs
+  if (pairs.length === 0) {
+    // clear pairs and copy all keys of exchangeInfo.pairs into it
+    pairs.splice(0, pairs.length, ...Object.keys(exchangeInfo.pairs));
+  }
+  logger.info(pairs);
+
+  return [logger, exchangeInfo, pairMap];
 }

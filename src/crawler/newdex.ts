@@ -1,10 +1,11 @@
 import { strict as assert } from 'assert';
 import WebSocket from 'ws';
-import getExchangeInfo, { ExchangeInfo, NewdexPairInfo } from 'exchange-info';
-import { listenWebSocket, getChannels, buildPairMap } from './util';
-import createLogger from '../util/logger';
+import { ExchangeInfo, NewdexPairInfo } from 'exchange-info';
+import { listenWebSocket, getChannels, initBeforeCrawl } from './util';
 import { OrderItem, OrderBookMsg } from '../pojo/msg';
 import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
+
+const EXCHANGE_NAME = 'Newdex';
 
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
   const pairInfo = exchangeInfo.pairs[pair] as NewdexPairInfo;
@@ -22,15 +23,7 @@ export default async function crawl(
   pairs: string[] = [],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const logger = createLogger('Newdex');
-  const exchangeInfo = await getExchangeInfo('Newdex');
-  // raw_pair -> pairInfo
-  const pairMap = buildPairMap(exchangeInfo.pairs);
-  // empty means all pairs
-  if (pairs.length === 0) {
-    pairs = Object.keys(exchangeInfo.pairs); // eslint-disable-line no-param-reassign
-  }
-  logger.info(pairs);
+  const [logger, exchangeInfo, pairMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
 
   const websocket = new WebSocket(exchangeInfo.websocket_endpoint);
   websocket.on('open', () => {

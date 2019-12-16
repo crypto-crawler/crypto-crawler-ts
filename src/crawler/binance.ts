@@ -1,8 +1,7 @@
 import { strict as assert } from 'assert';
 import WebSocket from 'ws';
-import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
-import { listenWebSocket, getChannels, buildPairMap } from './util';
-import createLogger from '../util/logger';
+import { ExchangeInfo } from 'exchange-info';
+import { listenWebSocket, getChannels, initBeforeCrawl } from './util';
 import { OrderItem, OrderBookMsg, TradeMsg, BboMsg } from '../pojo/msg';
 import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
@@ -48,18 +47,11 @@ export default async function crawl(
   pairs: string[] = [],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const logger = createLogger(EXCHANGE_NAME);
-  const exchangeInfo = await getExchangeInfo(EXCHANGE_NAME);
-  // raw_pair -> pairInfo
-  const pairMap = buildPairMap(exchangeInfo.pairs);
-  // empty means all pairs
-  if (pairs.length === 0) {
-    pairs = Object.keys(exchangeInfo.pairs); // eslint-disable-line no-param-reassign
-  }
-  logger.info(pairs);
+  const [logger, exchangeInfo, pairMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
 
   const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
   assert.ok(channels.length > 0);
+
   const websocketUrl = `${exchangeInfo.websocket_endpoint}/stream?streams=${channels.join('/')}`;
   const websocket = new WebSocket(websocketUrl);
   listenWebSocket(
@@ -152,7 +144,7 @@ export default async function crawl(
             price: parseFloat(rawTradeMsg.p),
             quantity: parseFloat(rawTradeMsg.q),
             side: rawTradeMsg.m === false,
-            trade_id: rawTradeMsg.t,
+            trade_id: rawTradeMsg.t.toString(),
           };
           await msgCallback(msg);
           break;

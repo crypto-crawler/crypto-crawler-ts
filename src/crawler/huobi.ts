@@ -1,9 +1,8 @@
 import { strict as assert } from 'assert';
 import WebSocket from 'ws';
 import Pako from 'pako';
-import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
-import { getChannels, buildPairMap } from './util';
-import createLogger from '../util/logger';
+import { ExchangeInfo } from 'exchange-info';
+import { getChannels, initBeforeCrawl } from './util';
 import { OrderBookMsg, TradeMsg, BboMsg } from '../pojo/msg';
 import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
@@ -49,19 +48,11 @@ export default async function crawl(
   pairs: string[] = [],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const logger = createLogger(EXCHANGE_NAME);
-  const exchangeInfo = await getExchangeInfo(EXCHANGE_NAME);
-  assert.equal(exchangeInfo.name, EXCHANGE_NAME);
-  // raw_pair -> pairInfo
-  const pairMap = buildPairMap(exchangeInfo.pairs);
-  // empty means all pairs
-  if (pairs.length === 0) {
-    pairs = Object.keys(exchangeInfo.pairs); // eslint-disable-line no-param-reassign
-  }
-  logger.info(pairs);
+  const [logger, exchangeInfo, pairMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
 
   const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
   assert.ok(channels.length > 0);
+
   const websocket = new WebSocket(exchangeInfo.websocket_endpoint);
 
   websocket.on('open', () => {
@@ -155,7 +146,7 @@ export default async function crawl(
               price: x.price,
               quantity: x.amount,
               side: x.direction === 'sell',
-              trade_id: x.id, // TODO: bignumber
+              trade_id: x.id.toString(), // TODO: bignumber
             }));
 
             tradeMsges.forEach(async tradeMsg => msgCallback(tradeMsg));

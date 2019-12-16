@@ -1,9 +1,11 @@
 import { strict as assert } from 'assert';
-import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
+import { ExchangeInfo } from 'exchange-info';
 import { Client, IFrame, Message } from '@stomp/stompjs';
 import { OrderItem, OrderBookMsg, TradeMsg } from '../pojo/msg';
-import createLogger from '../util/logger';
 import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
+import { initBeforeCrawl } from './util';
+
+const EXCHANGE_NAME = 'WhaleEx';
 
 // see https://github.com/stomp-js/stompjs/issues/28#issuecomment-554984094
 Object.assign(global, { WebSocket: require('ws') }); // eslint-disable-line global-require
@@ -25,13 +27,7 @@ export default async function crawl(
   pairs: string[] = [],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const logger = createLogger('WhaleEx');
-  const exchangeInfo = await getExchangeInfo('WhaleEx');
-  // empty means all pairs
-  if (pairs.length === 0) {
-    pairs = Object.keys(exchangeInfo.pairs); // eslint-disable-line no-param-reassign
-  }
-  logger.info(pairs);
+  const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
 
   const client = new Client({
     brokerURL: exchangeInfo.websocket_endpoint,
@@ -118,7 +114,7 @@ export default async function crawl(
                 price: parseFloat(rawMsg.price),
                 quantity: parseFloat(rawMsg.quantity),
                 side: rawMsg.bidAsk === 'A',
-                trade_id: parseInt(rawMsg.tradeId, 10),
+                trade_id: rawMsg.tradeId,
               };
               await msgCallback(msg);
               break;
