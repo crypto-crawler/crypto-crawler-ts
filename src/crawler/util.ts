@@ -21,7 +21,7 @@ export function getChannels(
 
 export async function listenWebSocket(
   websocket: WebSocket,
-  handleData: (data: WebSocket.Data) => void,
+  handleData: (data: WebSocket.Data) => Promise<void>,
   logger: Logger,
 ): Promise<void> {
   websocket.on('message', handleData);

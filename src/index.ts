@@ -1,15 +1,9 @@
-import {
-  SupportedExchange,
-  ChannelType,
-  ProcessMessageCallback,
-  defaultProcessMessageCallback,
-} from './crawler';
+import { SupportedExchange, ChannelType, MsgCallback, defaultMsgCallback } from './crawler';
 import crawlBinance from './crawler/binance';
 import crawlNewdex from './crawler/newdex';
 import crawlWhaleEx from './crawler/whaleex';
 
 export * from './pojo/msg';
-export { SupportedExchange, ChannelType, ProcessMessageCallback } from './crawler';
 
 /**
  * Crawl messages from a crypto exchange.
@@ -25,7 +19,7 @@ export default async function crawl(
   exchange: SupportedExchange,
   channelTypes: ChannelType[],
   pairs: string[] = [],
-  processMsgCallback: ProcessMessageCallback = defaultProcessMessageCallback,
+  msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   if (pairs.length > 0) {
     pairs = Array.from(new Set(pairs)); // eslint-disable-line no-param-reassign
@@ -33,11 +27,11 @@ export default async function crawl(
 
   switch (exchange) {
     case 'Binance':
-      return crawlBinance(channelTypes, pairs, processMsgCallback);
+      return crawlBinance(channelTypes, pairs, msgCallback);
     case 'Newdex':
-      return crawlNewdex(channelTypes, pairs, processMsgCallback);
+      return crawlNewdex(channelTypes, pairs, msgCallback);
     case 'WhaleEx':
-      return crawlWhaleEx(channelTypes, pairs, processMsgCallback);
+      return crawlWhaleEx(channelTypes, pairs, msgCallback);
     default:
       throw new Error(`Unknown exchange: ${exchange}`);
   }

@@ -3,14 +3,16 @@ import WebSocket from 'ws';
 import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import { listenWebSocket, getChannels, buildPairMap } from './util';
 import createLogger from '../util/logger';
-import { OrderItem, OrderBookMsg, TradeMsg } from '../pojo/msg';
-import { ChannelType, ProcessMessageCallback, defaultProcessMessageCallback } from './index';
+import { OrderItem, OrderBookMsg, TradeMsg, BboMsg } from '../pojo/msg';
+import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
   const pairInfo = exchangeInfo.pairs[pair];
   const rawPair = pairInfo.raw_pair.toLowerCase();
   switch (channeltype) {
-    case 'OrderBook':
+    case 'BBO':
+      return `${rawPair}@bookTicker`;
+    case 'OrderBookUpdate':
       return `${rawPair}@depth`;
     case 'Trade':
       return `${rawPair}@trade`;
@@ -24,11 +26,14 @@ function getChannelType(channel: string): ChannelType {
   const suffix = channel.split('@')[1];
   let result: ChannelType;
   switch (suffix) {
-    case 'trade':
-      result = 'Trade';
+    case 'bookTicker':
+      result = 'BBO';
       break;
     case 'depth':
-      result = 'OrderBook';
+      result = 'OrderBookUpdate';
+      break;
+    case 'trade':
+      result = 'Trade';
       break;
     default:
       throw Error(`Unknown channel: ${channel}`);
@@ -39,7 +44,7 @@ function getChannelType(channel: string): ChannelType {
 export default async function crawl(
   channelTypes: ChannelType[],
   pairs: string[] = [],
-  processMsgCallback: ProcessMessageCallback = defaultProcessMessageCallback,
+  msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   const logger = createLogger('Binance');
   const exchangeInfo = await getExchangeInfo('Binance');
@@ -57,11 +62,34 @@ export default async function crawl(
   const websocket = new WebSocket(websocketUrl);
   listenWebSocket(
     websocket,
-    data => {
+    async data => {
       const rawMsg: { stream: string; data: { [key: string]: any } } = JSON.parse(data as string);
       const channelType = getChannelType(rawMsg.stream);
       switch (channelType) {
-        case 'OrderBook': {
+        case 'BBO': {
+          const rawBookTickerMsg = rawMsg.data as {
+            u: number; // order book updateId
+            s: string; // symbol
+            b: string; // best bid price
+            B: string; // best bid qty
+            a: string; // best ask price
+            A: string; // best ask qty
+          };
+          const msg: BboMsg = {
+            exchange: exchangeInfo.name,
+            channel: rawMsg.stream,
+            pair: pairMap.get(rawBookTickerMsg.s)!.normalized_pair,
+            timestamp: Date.now(),
+            raw: data as string,
+            bidPrice: parseFloat(rawBookTickerMsg.b),
+            bidQuantity: parseFloat(rawBookTickerMsg.B),
+            askPrice: parseFloat(rawBookTickerMsg.a),
+            askQuantity: parseFloat(rawBookTickerMsg.A),
+          };
+          await msgCallback(msg);
+          break;
+        }
+        case 'OrderBookUpdate': {
           const rawOrderbookMsg = rawMsg.data as {
             e: string;
             E: number;
@@ -98,7 +126,7 @@ export default async function crawl(
           rawOrderbookMsg.b.forEach((text: Array<string>) => {
             msg.bids.push(parseOrder(text));
           });
-          processMsgCallback(msg);
+          await msgCallback(msg);
           break;
         }
         case 'Trade': {
@@ -127,7 +155,7 @@ export default async function crawl(
             side: rawTradeMsg.m === false,
             trade_id: rawTradeMsg.t,
           };
-          processMsgCallback(msg);
+          await msgCallback(msg);
           break;
         }
         default:

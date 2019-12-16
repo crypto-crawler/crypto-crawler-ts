@@ -3,7 +3,7 @@ import getExchangeInfo, { ExchangeInfo } from 'exchange-info';
 import { Client, IFrame, Message } from '@stomp/stompjs';
 import { OrderItem, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import createLogger from '../util/logger';
-import { ChannelType, ProcessMessageCallback, defaultProcessMessageCallback } from './index';
+import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
 // see https://github.com/stomp-js/stompjs/issues/28#issuecomment-554984094
 Object.assign(global, { WebSocket: require('ws') }); // eslint-disable-line global-require
@@ -11,7 +11,7 @@ Object.assign(global, { WebSocket: require('ws') }); // eslint-disable-line glob
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
   const pairInfo = exchangeInfo.pairs[pair];
   switch (channeltype) {
-    case 'OrderBook':
+    case 'FullOrderBook':
       return `/${pairInfo.raw_pair}@depth5`;
     case 'Trade':
       return `/${pairInfo.raw_pair}@trade`;
@@ -23,7 +23,7 @@ function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: Exchan
 export default async function crawl(
   channelTypes: ChannelType[],
   pairs: string[] = [],
-  processMsgCallback: ProcessMessageCallback = defaultProcessMessageCallback,
+  msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   const logger = createLogger('WhaleEx');
   const exchangeInfo = await getExchangeInfo('WhaleEx');
@@ -52,11 +52,11 @@ export default async function crawl(
     channelTypes.forEach(channelType => {
       pairs.forEach(pair => {
         const channel = getChannel(channelType, pair, exchangeInfo);
-        client.subscribe(channel, (message: Message) => {
+        client.subscribe(channel, async (message: Message) => {
           assert.equal(message.command, 'MESSAGE');
           assert.equal(channel, message.headers.destination);
           switch (channelType) {
-            case 'OrderBook': {
+            case 'FullOrderBook': {
               const rawMsg = JSON.parse(message.body) as {
                 type: string;
                 timestamp: string;
@@ -94,7 +94,7 @@ export default async function crawl(
               rawMsg.bids.forEach((text: string) => {
                 msg.bids.push(parseOrder(text));
               });
-              processMsgCallback(msg);
+              await msgCallback(msg);
               break;
             }
             case 'Trade': {
@@ -120,7 +120,7 @@ export default async function crawl(
                 side: rawMsg.bidAsk === 'A',
                 trade_id: parseInt(rawMsg.tradeId, 10),
               };
-              processMsgCallback(msg);
+              await msgCallback(msg);
               break;
             }
             default:

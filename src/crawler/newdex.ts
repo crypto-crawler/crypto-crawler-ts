@@ -4,12 +4,13 @@ import getExchangeInfo, { ExchangeInfo, NewdexPairInfo } from 'exchange-info';
 import { listenWebSocket, getChannels, buildPairMap } from './util';
 import createLogger from '../util/logger';
 import { OrderItem, OrderBookMsg } from '../pojo/msg';
-import { ChannelType, ProcessMessageCallback, defaultProcessMessageCallback } from './index';
+import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
   const pairInfo = exchangeInfo.pairs[pair] as NewdexPairInfo;
   switch (channeltype) {
-    case 'OrderBook':
+    case 'FullOrderBook':
+    case 'OrderBookUpdate':
       return `depth.${pairInfo.pair_symbol}:${pairInfo.price_precision}`;
     default:
       throw Error(`ChannelType ${channeltype} is not supported for Newdex yet`);
@@ -19,7 +20,7 @@ function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: Exchan
 export default async function crawl(
   channelTypes: ChannelType[],
   pairs: string[] = [],
-  processMsgCallback: ProcessMessageCallback = defaultProcessMessageCallback,
+  msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   const logger = createLogger('Newdex');
   const exchangeInfo = await getExchangeInfo('Newdex');
@@ -38,7 +39,7 @@ export default async function crawl(
 
   listenWebSocket(
     websocket,
-    data => {
+    async data => {
       const raw = data as string;
       const rawMsg = JSON.parse(raw) as { type: string; [key: string]: any };
       switch (rawMsg.type) {
@@ -101,7 +102,7 @@ export default async function crawl(
             rawOrderBookMsg.data.bids.forEach(text => {
               msg.bids.push(parseOrder(text));
             });
-            processMsgCallback(msg);
+            await msgCallback(msg);
           } else {
             logger.warn(rawMsg);
           }

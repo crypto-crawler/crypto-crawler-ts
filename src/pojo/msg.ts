@@ -9,7 +9,6 @@ export interface Msg {
   pair: string; // normalized pair name, upper case, splited by /, e.g., BTC/USDT
   timestamp: number; // Unix timestamp, in milliseconds
   raw: string; // the original message
-  [key: string]: any; // parsed from raw
 }
 
 export interface TradeMsg extends Msg {
@@ -29,6 +28,13 @@ export interface OrderBookMsg extends Msg {
   asks: Array<OrderItem>; // sorted from smallest to largest
   bids: Array<OrderItem>; // sorted from largest to smallest
   full: boolean;
+}
+
+export interface BboMsg extends Msg {
+  bidPrice: number;
+  bidQuantity: number;
+  askPrice: number;
+  askQuantity: number;
 }
 
 // Specific data types for different exchanges
