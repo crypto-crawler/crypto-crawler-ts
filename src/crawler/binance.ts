@@ -65,7 +65,8 @@ export default async function crawl(
   listenWebSocket(
     websocket,
     async data => {
-      const rawMsg: { stream: string; data: { [key: string]: any } } = JSON.parse(data as string);
+      const raw = data as string;
+      const rawMsg: { stream: string; data: { [key: string]: any } } = JSON.parse(raw);
       const channelType = getChannelType(rawMsg.stream);
       switch (channelType) {
         case 'BBO': {
@@ -82,7 +83,7 @@ export default async function crawl(
             channel: rawMsg.stream,
             pair: pairMap.get(rawBookTickerMsg.s)!.normalized_pair,
             timestamp: Date.now(),
-            raw: data as string,
+            raw,
             bidPrice: parseFloat(rawBookTickerMsg.b),
             bidQuantity: parseFloat(rawBookTickerMsg.B),
             askPrice: parseFloat(rawBookTickerMsg.a),
@@ -107,7 +108,7 @@ export default async function crawl(
             channel: rawMsg.stream,
             pair: pairMap.get(rawOrderbookMsg.s)!.normalized_pair,
             timestamp: rawOrderbookMsg.E,
-            raw: data as string,
+            raw,
             asks: [],
             bids: [],
             full: false,
@@ -147,7 +148,7 @@ export default async function crawl(
             channel: rawMsg.stream,
             pair: pairMap.get(rawTradeMsg.s)!.normalized_pair,
             timestamp: rawTradeMsg.T,
-            raw: data as string,
+            raw,
             price: parseFloat(rawTradeMsg.p),
             quantity: parseFloat(rawTradeMsg.q),
             side: rawTradeMsg.m === false,
