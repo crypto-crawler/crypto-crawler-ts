@@ -2,6 +2,7 @@ import { SupportedExchange, ChannelType, MsgCallback, defaultMsgCallback } from 
 import crawlBinance from './crawler/binance';
 import crawlHuobi from './crawler/huobi';
 import crawlNewdex from './crawler/newdex';
+import crawlOKExSpot from './crawler/okex_spot';
 import crawlWhaleEx from './crawler/whaleex';
 
 export * from './pojo/msg';
@@ -33,6 +34,8 @@ export default async function crawl(
       return crawlHuobi(channelTypes, pairs, msgCallback);
     case 'Newdex':
       return crawlNewdex(channelTypes, pairs, msgCallback);
+    case 'OKEx_Spot':
+      return crawlOKExSpot(channelTypes, pairs, msgCallback);
     case 'WhaleEx':
       return crawlWhaleEx(channelTypes, pairs, msgCallback);
     default:

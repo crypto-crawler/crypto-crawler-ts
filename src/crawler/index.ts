@@ -4,13 +4,14 @@ export const CHANNEL_TYPES = [
   'BBO',
   'FullOrderBook',
   'KLine',
+  'OrderBook', // first is full, followed by updates
   'OrderBookUpdate',
   'Ticker',
   'Trade',
 ] as const;
 export type ChannelType = typeof CHANNEL_TYPES[number];
 
-export const EXCHANGES = ['Binance', 'Huobi', 'Newdex', 'WhaleEx'] as const;
+export const EXCHANGES = ['Binance', 'Huobi', 'Newdex', 'OKEx_Spot', 'WhaleEx'] as const;
 export type SupportedExchange = typeof EXCHANGES[number];
 
 export type MsgCallback = (msg: Msg) => Promise<Boolean>;
