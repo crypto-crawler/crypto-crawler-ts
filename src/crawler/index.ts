@@ -13,6 +13,7 @@ export type ChannelType = typeof CHANNEL_TYPES[number];
 
 export const EXCHANGES = [
   'Binance',
+  'Bitstamp',
   'Coinbase',
   'Huobi',
   'Kraken',

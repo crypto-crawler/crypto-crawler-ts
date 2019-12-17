@@ -1,5 +1,6 @@
 import { SupportedExchange, ChannelType, MsgCallback, defaultMsgCallback } from './crawler';
 import crawlBinance from './crawler/binance';
+import crawlBitstamp from './crawler/bitstamp';
 import crawlCoinbase from './crawler/coinbase';
 import crawlHuobi from './crawler/huobi';
 import crawlKraken from './crawler/kraken';
@@ -32,6 +33,8 @@ export default async function crawl(
   switch (exchange) {
     case 'Binance':
       return crawlBinance(channelTypes, pairs, msgCallback);
+    case 'Bitstamp':
+      return crawlBitstamp(channelTypes, pairs, msgCallback);
     case 'Coinbase':
       return crawlCoinbase(channelTypes, pairs, msgCallback);
     case 'Huobi':
