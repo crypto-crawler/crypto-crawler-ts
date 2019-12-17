@@ -12,7 +12,7 @@ function processMsgCallback(msg) {
 }
 
 (async () => {
-  await crawl('Newdex', ['OrderBook'], ['EIDOS_EOS'], processMsgCallback);
+  await crawl('Coinbase', ['OrderBook'], ['BTC_USD'], processMsgCallback);
 })();
 ```
 
