@@ -63,8 +63,7 @@ export default async function crawl(
       websocket.send(JSON.stringify(command));
     });
   });
-  websocket.on('message', data => {
-    const raw = data as string;
+  websocket.on('message', (raw: string) => {
     const rawMsg = JSON.parse(raw);
 
     if (rawMsg.event === 'heartbeat') {
