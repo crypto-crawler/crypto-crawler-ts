@@ -11,7 +11,14 @@ export const CHANNEL_TYPES = [
 ] as const;
 export type ChannelType = typeof CHANNEL_TYPES[number];
 
-export const EXCHANGES = ['Binance', 'Huobi', 'Newdex', 'OKEx_Spot', 'WhaleEx'] as const;
+export const EXCHANGES = [
+  'Binance',
+  'Coinbase',
+  'Huobi',
+  'Newdex',
+  'OKEx_Spot',
+  'WhaleEx',
+] as const;
 export type SupportedExchange = typeof EXCHANGES[number];
 
 export type MsgCallback = (msg: Msg) => Promise<Boolean>;
