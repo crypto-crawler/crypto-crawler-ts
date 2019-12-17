@@ -19,7 +19,7 @@ function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: Exchan
     case 'Trade':
       return `market.${rawPair}.trade.detail`;
     default:
-      throw Error(`ChannelType ${channeltype} is not supported for Binance yet`);
+      throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
 }
 

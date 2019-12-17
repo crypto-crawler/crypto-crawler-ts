@@ -14,7 +14,7 @@ function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: Exchan
     case 'OrderBookUpdate':
       return `depth.${pairInfo.pair_symbol}:${pairInfo.price_precision}`;
     default:
-      throw Error(`ChannelType ${channeltype} is not supported for Newdex yet`);
+      throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
 }
 

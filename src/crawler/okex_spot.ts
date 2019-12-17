@@ -18,7 +18,7 @@ function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: Exchan
     case 'Trade':
       return `spot/trade:${pair.replace('_', '-')}`;
     default:
-      throw Error(`ChannelType ${channeltype} is not supported for Newdex yet`);
+      throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
 }
 

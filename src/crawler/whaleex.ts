@@ -18,7 +18,7 @@ function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: Exchan
     case 'Trade':
       return `/${pairInfo.raw_pair}@trade`;
     default:
-      throw Error(`CrawlType ${channeltype} is not supported for WhaleEx yet`);
+      throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
 }
 
