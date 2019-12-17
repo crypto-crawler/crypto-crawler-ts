@@ -15,6 +15,7 @@ export const EXCHANGES = [
   'Binance',
   'Coinbase',
   'Huobi',
+  'Kraken',
   'Newdex',
   'OKEx_Spot',
   'WhaleEx',

@@ -2,6 +2,7 @@ import { SupportedExchange, ChannelType, MsgCallback, defaultMsgCallback } from 
 import crawlBinance from './crawler/binance';
 import crawlCoinbase from './crawler/coinbase';
 import crawlHuobi from './crawler/huobi';
+import crawlKraken from './crawler/kraken';
 import crawlNewdex from './crawler/newdex';
 import crawlOKExSpot from './crawler/okex_spot';
 import crawlWhaleEx from './crawler/whaleex';
@@ -35,6 +36,8 @@ export default async function crawl(
       return crawlCoinbase(channelTypes, pairs, msgCallback);
     case 'Huobi':
       return crawlHuobi(channelTypes, pairs, msgCallback);
+    case 'Kraken':
+      return crawlKraken(channelTypes, pairs, msgCallback);
     case 'Newdex':
       return crawlNewdex(channelTypes, pairs, msgCallback);
     case 'OKEx_Spot':

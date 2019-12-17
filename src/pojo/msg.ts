@@ -22,6 +22,7 @@ export interface OrderItem {
   price: number;
   quantity: number;
   cost: number;
+  timestamp?: number;
 }
 
 export interface OrderBookMsg extends Msg {
