@@ -8,8 +8,6 @@ import crawlNewdex from './crawler/newdex';
 import crawlOKExSpot from './crawler/okex_spot';
 import crawlWhaleEx from './crawler/whaleex';
 
-export * from './pojo/msg';
-
 /**
  * Crawl messages from a crypto exchange.
  *
@@ -23,7 +21,7 @@ export * from './pojo/msg';
 export default async function crawl(
   exchange: string,
   channelTypes: ChannelType[],
-  pairs: string[] = [],
+  pairs: string[] = [], // empty means all
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   if (pairs.length > 0) {
@@ -51,3 +49,6 @@ export default async function crawl(
       throw new Error(`Unknown exchange: ${exchange}`);
   }
 }
+
+export * from './pojo/msg';
+export { ChannelType, MsgCallback } from './crawler';
