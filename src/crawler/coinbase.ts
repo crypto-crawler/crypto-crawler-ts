@@ -102,8 +102,8 @@ export default async function crawl(
         const parse = (arr: [string, string, string]): { side: boolean; order: OrderItem } => {
           assert.equal(arr.length, 3);
           const side = arr[0] === 'sell';
-          const price = parseFloat(arr[0]);
-          const quantity = parseFloat(arr[1]);
+          const price = parseFloat(arr[1]);
+          const quantity = parseFloat(arr[2]);
           return {
             side,
             order: {
