@@ -23,8 +23,7 @@ export const EXCHANGES = [
 ] as const;
 export type SupportedExchange = typeof EXCHANGES[number];
 
-export type MsgCallback = (msg: Msg) => Promise<Boolean>;
-export async function defaultMsgCallback(msg: Msg): Promise<Boolean> {
+export type MsgCallback = (msg: Msg) => Promise<void>;
+export async function defaultMsgCallback(msg: Msg): Promise<void> {
   console.dir(msg); // eslint-disable-line no-console
-  return true;
 }
