@@ -1,7 +1,6 @@
 import { strict as assert } from 'assert';
-import WebSocket from 'ws';
 import { ExchangeInfo } from 'exchange-info';
-import { listenWebSocket, getChannels, initBeforeCrawl } from './util';
+import { connect, getChannels, initBeforeCrawl } from './util';
 import { OrderItem, OrderBookMsg, TradeMsg, BboMsg } from '../pojo/msg';
 import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
@@ -53,9 +52,8 @@ export default async function crawl(
   assert.ok(channels.length > 0);
 
   const websocketUrl = `${exchangeInfo.websocket_endpoint}/stream?streams=${channels.join('/')}`;
-  const websocket = new WebSocket(websocketUrl);
-  listenWebSocket(
-    websocket,
+  connect(
+    websocketUrl,
     async data => {
       const raw = data as string;
       const rawMsg: { stream: string; data: { [key: string]: any } } = JSON.parse(raw);
@@ -154,6 +152,7 @@ export default async function crawl(
           logger.warn(rawMsg);
       }
     },
+    undefined,
     logger,
   );
 }

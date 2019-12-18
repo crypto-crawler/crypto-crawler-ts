@@ -1,8 +1,7 @@
 import { strict as assert } from 'assert';
-import WebSocket from 'ws';
 import Pako from 'pako';
 import { ExchangeInfo } from 'exchange-info';
-import { getChannels, initBeforeCrawl } from './util';
+import { connect, getChannels, initBeforeCrawl } from './util';
 import { OrderBookMsg, TradeMsg, BboMsg } from '../pojo/msg';
 import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
@@ -53,20 +52,15 @@ export default async function crawl(
   const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
   assert.ok(channels.length > 0);
 
-  const websocket = new WebSocket(exchangeInfo.websocket_endpoint);
-
-  websocket.on('open', () => {
-    logger.info(`${websocket.url} connected`);
-    channels.forEach(channel => {
-      websocket.send(JSON.stringify({ sub: channel, id: 'crypto-crawler' }));
-    });
-  });
-  websocket.on('message', data => {
-    const raw = Pako.ungzip(data as pako.Data, { to: 'string' });
-    const obj = JSON.parse(raw);
-    if (obj.ping) {
-      websocket.send(JSON.stringify({ pong: obj.ping }));
-    } else if (obj.tick) {
+  connect(
+    exchangeInfo.websocket_endpoint,
+    data => {
+      const raw = Pako.ungzip(data as pako.Data, { to: 'string' });
+      const obj = JSON.parse(raw);
+      if (!obj.tick) {
+        logger.warn(obj);
+        return;
+      }
       if (obj.ts && obj.ch && obj.tick) {
         const rawMsg = obj as { ch: string; ts: number; tick: { [key: string]: any } };
         const channelType = getChannelType(rawMsg.ch);
@@ -158,16 +152,8 @@ export default async function crawl(
       } else {
         logger.warn(obj);
       }
-    } else {
-      logger.warn(obj);
-    }
-  });
-  websocket.on('error', error => {
-    logger.error(JSON.stringify(error));
-    process.exit(1); // fail fast, pm2 will restart it
-  });
-  websocket.on('close', () => {
-    logger.info(`${websocket.url} disconnected`);
-    process.exit(); // pm2 will restart it
-  });
+    },
+    channels.map(channel => ({ sub: channel, id: 'crypto-crawler' })),
+    logger,
+  );
 }
