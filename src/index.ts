@@ -1,4 +1,4 @@
-import { SupportedExchange, ChannelType, MsgCallback, defaultMsgCallback } from './crawler';
+import { ChannelType, MsgCallback, defaultMsgCallback } from './crawler';
 import crawlBinance from './crawler/binance';
 import crawlBitstamp from './crawler/bitstamp';
 import crawlCoinbase from './crawler/coinbase';
@@ -21,7 +21,7 @@ export * from './pojo/msg';
  * @returns {Promise<void>}
  */
 export default async function crawl(
-  exchange: SupportedExchange,
+  exchange: string,
   channelTypes: ChannelType[],
   pairs: string[] = [],
   msgCallback: MsgCallback = defaultMsgCallback,
