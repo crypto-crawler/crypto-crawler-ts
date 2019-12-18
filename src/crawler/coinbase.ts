@@ -65,7 +65,7 @@ export default async function crawl(
           exchange: exchangeInfo.name,
           channel: 'level2',
           pair: idToPairInfoMap[rawFullOrderBook.product_id].normalized_pair,
-          timestamp: new Date((rawFullOrderBook as any).time as string).getTime(),
+          timestamp: Date.now(),
           raw: JSON.stringify(rawFullOrderBook),
           asks: [],
           bids: [],
