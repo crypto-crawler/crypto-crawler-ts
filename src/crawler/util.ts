@@ -51,7 +51,7 @@ export function connect(
       const raw = Pako.ungzip(data as pako.Data, { to: 'string' });
       const obj = JSON.parse(raw);
       if (obj.ping) {
-        websocket.pong();
+        websocket.send(JSON.stringify({ pong: obj.ping }));
         return;
       }
     }
