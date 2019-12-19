@@ -1,6 +1,6 @@
 {
   "name": "crypto-crawler",
-  "version": "2.1.4",
+  "version": "2.1.6",
   "description": "Crawl orderbook and trade messages from crypto exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -37,7 +37,7 @@
   "homepage": "https://github.com/soulmachine/crypto-crawler#readme",
   "devDependencies": {
     "@types/figlet": "^1.2.0",
-    "@types/node": "^12.12.20",
+    "@types/node": "^12.12.21",
     "@types/pako": "^1.0.1",
     "@types/ws": "^6.0.4",
     "@types/yargs": "^13.0.3",

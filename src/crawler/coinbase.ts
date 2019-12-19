@@ -50,8 +50,9 @@ export default async function crawl(
       return;
     }
     if (data.type === 'heartbeat') {
-      const msg = data as WebsocketMessage.Heartbeat;
-      logger.info(msg);
+      // Too much logs, comment out to save disk space
+      // const msg = data as WebsocketMessage.Heartbeat;
+      // logger.info(msg);
       return;
     }
     if (data.type === 'received') {
