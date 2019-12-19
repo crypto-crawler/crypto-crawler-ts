@@ -58,6 +58,11 @@ export default async function crawl(
     if (data.type === 'received') {
       return; // ignore, wait for the exchange to process  this message
     }
+    if (data.type === 'subscriptions') {
+      logger.info('subscriptions succeeded');
+      logger.info(data);
+      return;
+    }
 
     switch (data.type) {
       case 'snapshot': {
