@@ -102,15 +102,30 @@ export async function initBeforeCrawl(
   pairs: string[] = [],
 ): Promise<[Logger, ExchangeInfo, Map<string, PairInfo>]> {
   const logger = createLogger(exchange);
-  const exchangeInfo = await getExchangeInfo(exchange);
+
+  let error: Error | undefined;
+  let exchangeInfo: ExchangeInfo | undefined;
+  // retry 3 times
+  for (let i = 0; i < 3; i += 1) {
+    try {
+      exchangeInfo = await getExchangeInfo(exchange); // eslint-disable-line no-await-in-loop
+      break;
+    } catch (e) {
+      error = e;
+    }
+  }
+  if (error) {
+    throw error;
+  }
+
   // raw_pair -> pairInfo
-  const pairMap = buildPairMap(exchangeInfo.pairs);
+  const pairMap = buildPairMap(exchangeInfo!.pairs);
   // empty means all pairs
   if (pairs.length === 0) {
     // clear pairs and copy all keys of exchangeInfo.pairs into it
-    pairs.splice(0, pairs.length, ...Object.keys(exchangeInfo.pairs));
+    pairs.splice(0, pairs.length, ...Object.keys(exchangeInfo!.pairs));
   }
   logger.info(pairs);
 
-  return [logger, exchangeInfo, pairMap];
+  return [logger, exchangeInfo!, pairMap];
 }
