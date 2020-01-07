@@ -5,6 +5,7 @@ import crawlBitstamp from './crawler/bitstamp';
 import crawlCoinbase from './crawler/coinbase';
 import crawlHuobi from './crawler/huobi';
 import crawlKraken from './crawler/kraken';
+import crawlMXC from './crawler/mxc';
 import crawlNewdex from './crawler/newdex';
 import crawlOKExSpot from './crawler/okex_spot';
 import crawlWhaleEx from './crawler/whaleex';
@@ -42,6 +43,8 @@ export default async function crawl(
       return crawlHuobi(channelTypes, pairs, msgCallback);
     case 'Kraken':
       return crawlKraken(channelTypes, pairs, msgCallback);
+    case 'MXC':
+      return crawlMXC(channelTypes, pairs, msgCallback);
     case 'Newdex':
       return crawlNewdex(channelTypes, pairs, msgCallback);
     case 'OKEx_Spot':
