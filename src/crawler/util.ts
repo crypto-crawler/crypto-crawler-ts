@@ -1,10 +1,9 @@
-import WebSocket from 'ws';
+import getExchangeInfo, { ExchangeInfo, PairInfo, SupportedExchange } from 'exchange-info';
 import Pako from 'pako';
 import { Logger } from 'winston';
-import getExchangeInfo, { ExchangeInfo, PairInfo, SupportedExchange } from 'exchange-info';
-
-import { ChannelType } from './index';
+import WebSocket from 'ws';
 import createLogger from '../util/logger';
+import { ChannelType } from './index';
 
 export function getChannels(
   channelTypes: ChannelType[],

@@ -1,5 +1,6 @@
-import { ChannelType, MsgCallback, defaultMsgCallback } from './crawler';
+import { ChannelType, defaultMsgCallback, MsgCallback } from './crawler';
 import crawlBinance from './crawler/binance';
+import crawlBitfinex from './crawler/bitfinex';
 import crawlBitstamp from './crawler/bitstamp';
 import crawlCoinbase from './crawler/coinbase';
 import crawlHuobi from './crawler/huobi';
@@ -12,7 +13,7 @@ import crawlWhaleEx from './crawler/whaleex';
  * Crawl messages from a crypto exchange.
  *
  * @export
- * @param {SupportedExchange} exchange The crypto exchange name
+ * @param {string} exchange The crypto exchange name
  * @param {ChannelType[]} channelTypes types of channels you want to crawl
  * @param {string[]} [pairs=[]] pairs you want to crawl
  * @param {ProcessMessageCallback} [processMsgCallback=defaultProcessMessageCallback] the callback to process messages
@@ -31,6 +32,8 @@ export default async function crawl(
   switch (exchange) {
     case 'Binance':
       return crawlBinance(channelTypes, pairs, msgCallback);
+    case 'Bitfinex':
+      return crawlBitfinex(channelTypes, pairs, msgCallback);
     case 'Bitstamp':
       return crawlBitstamp(channelTypes, pairs, msgCallback);
     case 'Coinbase':
@@ -50,5 +53,5 @@ export default async function crawl(
   }
 }
 
-export * from './pojo/msg';
 export { ChannelType, MsgCallback } from './crawler';
+export * from './pojo/msg';

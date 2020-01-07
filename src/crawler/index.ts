@@ -13,6 +13,7 @@ export type ChannelType = typeof CHANNEL_TYPES[number];
 
 export const EXCHANGES = [
   'Binance',
+  'Bitfinex',
   'Bitstamp',
   'Coinbase',
   'Huobi',
@@ -21,7 +22,6 @@ export const EXCHANGES = [
   'OKEx_Spot',
   'WhaleEx',
 ] as const;
-export type SupportedExchange = typeof EXCHANGES[number];
 
 export type MsgCallback = (msg: Msg) => Promise<void>;
 export async function defaultMsgCallback(msg: Msg): Promise<void> {
