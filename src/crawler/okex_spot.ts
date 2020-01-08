@@ -1,9 +1,9 @@
 import { strict as assert } from 'assert';
-import Pako from 'pako';
 import { ExchangeInfo } from 'exchange-info';
+import Pako from 'pako';
+import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
 import { connect, getChannels, initBeforeCrawl } from './util';
-import { OrderItem, OrderBookMsg, TradeMsg, BboMsg } from '../pojo/msg';
-import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
 const EXCHANGE_NAME = 'OKEx_Spot';
 
@@ -59,6 +59,9 @@ export default async function crawl(
       if (obj.event === 'error') {
         logger.error(obj);
         process.exit(-1); // fail fast
+      } else if (obj.event === 'subscribe') {
+        logger.info(obj);
+        return;
       }
       if (!(obj.table && obj.data)) {
         logger.warn(obj);

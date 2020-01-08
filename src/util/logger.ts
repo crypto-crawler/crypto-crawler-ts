@@ -1,8 +1,8 @@
-import { Logger, transports, createLogger as createLoggerWinston } from 'winston';
+import { createLogger as createLoggerWinston, Logger, transports } from 'winston';
 
 export default function createLogger(prefix: string): Logger {
   return createLoggerWinston({
-    level: 'info',
+    level: process.env.LOG_LEVEL || 'info',
     transports: [
       new transports.Console(),
       new transports.File({

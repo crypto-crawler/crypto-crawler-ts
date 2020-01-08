@@ -58,7 +58,8 @@ export default async function crawl(
       const raw = Pako.ungzip(data as pako.Data, { to: 'string' });
       const obj = JSON.parse(raw);
       if (!obj.tick) {
-        logger.warn(obj);
+        if (obj.status === 'ok') logger.info(obj);
+        else logger.warn(obj);
         return;
       }
       if (obj.ts && obj.ch && obj.tick) {
