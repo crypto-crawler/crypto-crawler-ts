@@ -107,7 +107,7 @@ export async function initBeforeCrawl(
   // retry 3 times
   for (let i = 0; i < 3; i += 1) {
     try {
-      exchangeInfo = await getExchangeInfo(exchange); // eslint-disable-line no-await-in-loop
+      exchangeInfo = await getExchangeInfo(exchange, 'Spot'); // eslint-disable-line no-await-in-loop
       break;
     } catch (e) {
       error = e;
