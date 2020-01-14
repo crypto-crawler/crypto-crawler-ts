@@ -1,6 +1,6 @@
 {
   "name": "crypto-crawler",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "description": "Crawl orderbook and trade messages from crypto exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -42,8 +42,8 @@
     "@types/socket.io-client": "^1.4.32",
     "@types/ws": "^6.0.4",
     "@types/yargs": "^15.0.0",
-    "@typescript-eslint/eslint-plugin": "^2.15.0",
-    "@typescript-eslint/parser": "^2.15.0",
+    "@typescript-eslint/eslint-plugin": "^2.16.0",
+    "@typescript-eslint/parser": "^2.16.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.9.0",
