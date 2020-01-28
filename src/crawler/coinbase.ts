@@ -1,9 +1,9 @@
 import { strict as assert } from 'assert';
 import { WebsocketClient, WebsocketMessage } from 'coinbase-pro';
 import { PairInfo } from 'exchange-info';
+import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
 import { initBeforeCrawl } from './util';
-import { OrderItem, OrderBookMsg, TradeMsg } from '../pojo/msg';
-import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
 const EXCHANGE_NAME = 'Coinbase';
 
@@ -35,7 +35,7 @@ export default async function crawl(
   assert.ok(channels.length > 0);
 
   const websocket = new WebsocketClient(
-    pairs.map(p => exchangeInfo.pairs[p].id as string),
+    pairs.map(p => exchangeInfo.pairs[p].raw_pair as string),
     exchangeInfo.websocket_endpoint,
     undefined,
     { channels },

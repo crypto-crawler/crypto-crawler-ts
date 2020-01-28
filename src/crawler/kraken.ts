@@ -1,8 +1,8 @@
 import { strict as assert } from 'assert';
-import { ExchangeInfo } from 'exchange-info';
+import { ExchangeInfo, PairInfo } from 'exchange-info';
+import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
 import { connect, getChannels, initBeforeCrawl } from './util';
-import { TradeMsg, BboMsg, OrderItem, OrderBookMsg } from '../pojo/msg';
-import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
 const EXCHANGE_NAME = 'Kraken';
 
@@ -38,12 +38,22 @@ function getChannelType(channel: string): ChannelType {
   return result;
 }
 
+function buildPairMap(pairs: { [key: string]: PairInfo }): Map<string, PairInfo> {
+  const result = new Map<string, PairInfo>();
+  Object.keys(pairs).forEach(p => {
+    const pairInfo = pairs[p];
+    result.set(pairInfo.wsname, pairInfo);
+  });
+  return result;
+}
+
 export default async function crawl(
   channelTypes: ChannelType[],
   pairs: string[] = [],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const [logger, exchangeInfo, pairMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  const pairMap = buildPairMap(exchangeInfo.pairs);
 
   const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
   assert.ok(channels.length > 0);
@@ -164,7 +174,7 @@ export default async function crawl(
     },
     channels.map(channel => ({
       event: 'subscribe',
-      pair: pairs.map(p => exchangeInfo.pairs[p].raw_pair),
+      pair: pairs.map(p => exchangeInfo.pairs[p].wsname),
       subscription: {
         name: channel,
       },
