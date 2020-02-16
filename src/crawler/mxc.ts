@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import io from 'socket.io-client';
+import { Logger } from 'winston';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
 import { getChannels, initBeforeCrawl } from './util';
@@ -25,29 +26,23 @@ function getChannel(channeltype: ChannelType): string {
   }
 }
 
-export default async function crawl(
+// MXC allows only one pair per connection.
+function crawlOnePair(
+  pair: string,
   channelTypes: ChannelType[],
-  pairs: string[] = [],
-  msgCallback: MsgCallback = defaultMsgCallback,
-): Promise<void> {
-  const [logger, exchangeInfo, pairMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
-  assert.ok(msgCallback);
-  assert.ok(pairMap);
-
-  const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
-  assert.ok(channels.length > 0);
-
+  msgCallback: MsgCallback,
+  logger: Logger,
+) {
   const socket = io('wss://wbs.mxc.com', { reconnection: true, transports: ['websocket'] });
 
   socket.on('connect', () => {
     logger.info('Socket.IO connected');
-    pairs.forEach(pair => {
-      channelTypes.forEach(channelType => {
-        const channel = getChannel(channelType);
-        socket.emit(channel, { symbol: pair });
-      });
+    channelTypes.forEach(channelType => {
+      const channel = getChannel(channelType);
+      socket.emit(channel, { symbol: pair });
     });
   });
+
   socket.on('connecting', () => logger.info('Socket.IO connecting...'));
   socket.on('reconnect', () => logger.warn('Socket.IO re-connected'));
   socket.on('connect_timeout', () => logger.error('connect_timeout'));
@@ -57,7 +52,7 @@ export default async function crawl(
   socket.on('push.symbol', (data: OrderBookAndTrades) => {
     if (data.data.deals && channelTypes.includes('Trade')) {
       const tradeMsges: TradeMsg[] = data.data.deals.map(x => ({
-        exchange: exchangeInfo.name,
+        exchange: EXCHANGE_NAME,
         channel: 'sub.symbol',
         pair: data.symbol,
         timestamp: x.t,
@@ -70,9 +65,10 @@ export default async function crawl(
 
       tradeMsges.forEach(async tradeMsg => msgCallback(tradeMsg));
     }
+
     if ((data.data.asks || data.data.bids) && channelTypes.includes('OrderBookUpdate')) {
       const orderBookMsg: OrderBookMsg = {
-        exchange: exchangeInfo.name,
+        exchange: EXCHANGE_NAME,
         channel: 'sub.symbol',
         pair: data.symbol,
         timestamp: Date.now(),
@@ -96,4 +92,19 @@ export default async function crawl(
       msgCallback(orderBookMsg);
     }
   });
+}
+
+export default async function crawl(
+  channelTypes: ChannelType[],
+  pairs: string[] = [],
+  msgCallback: MsgCallback = defaultMsgCallback,
+): Promise<void> {
+  const [logger, exchangeInfo, pairMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  assert.ok(msgCallback);
+  assert.ok(pairMap);
+
+  const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
+  assert.ok(channels.length > 0);
+
+  pairs.forEach(pair => crawlOnePair(pair, channelTypes, msgCallback, logger));
 }
