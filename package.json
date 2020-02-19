@@ -1,6 +1,6 @@
 {
   "name": "crypto-crawler",
-  "version": "2.4.5",
+  "version": "2.4.6",
   "description": "Crawl orderbook and trade messages from crypto exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -40,7 +40,7 @@
   "homepage": "https://github.com/soulmachine/crypto-crawler#readme",
   "devDependencies": {
     "@types/figlet": "^1.2.0",
-    "@types/node": "^13.7.1",
+    "@types/node": "^13.7.2",
     "@types/pako": "^1.0.1",
     "@types/socket.io-client": "^1.4.32",
     "@types/ws": "^7.2.1",
@@ -64,7 +64,7 @@
     "bitfinex-api-node": "^4.0.4",
     "chalk": "^3.0.0",
     "coinbase-pro": "^0.9.0",
-    "exchange-info": "^1.6.2",
+    "exchange-info": "^1.6.3",
     "figlet": "^1.2.4",
     "pako": "^1.0.11",
     "socket.io-client": "^2.3.0",
