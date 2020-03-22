@@ -1,8 +1,13 @@
 const eslintrc = {
   extends: [
+    'eslint:recommended',
     'airbnb-base',
-    'plugin:jest/recommended',
+    'plugin:@typescript-eslint/eslint-recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:import/errors',
+    'plugin:import/warnings',
     'plugin:import/typescript',
+    'plugin:jest/recommended',
     'plugin:prettier/recommended',
   ],
   env: {
@@ -12,7 +17,7 @@ const eslintrc = {
     es6: true,
   },
   parser: '@typescript-eslint/parser',
-  plugins: ['markdown', 'jest', '@typescript-eslint'],
+  plugins: ['@typescript-eslint', 'prettier', 'import', 'jest', 'markdown'],
   // https://github.com/typescript-eslint/typescript-eslint/issues/46#issuecomment-470486034
   overrides: [
     {
@@ -23,8 +28,10 @@ const eslintrc = {
     },
   ],
   rules: {
-    camelcase: 0,
+    camelcase: 'off',
+    '@typescript-eslint/camelcase': 'off',
     'import/extensions': 'off',
+    '@typescript-eslint/no-non-null-assertion': 'off',
   },
 };
 

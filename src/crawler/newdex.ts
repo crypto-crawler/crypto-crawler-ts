@@ -1,9 +1,9 @@
 import { strict as assert } from 'assert';
-import WebSocket from 'ws';
 import { ExchangeInfo, NewdexPairInfo } from 'exchange-info';
+import WebSocket from 'ws';
+import { OrderBookMsg, OrderItem } from '../pojo/msg';
+import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
 import { getChannels, initBeforeCrawl } from './util';
-import { OrderItem, OrderBookMsg } from '../pojo/msg';
-import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
 const EXCHANGE_NAME = 'Newdex';
 
@@ -32,14 +32,15 @@ export default async function crawl(
       websocket.send(JSON.stringify({ type: 'handshake', version: '1.4' }));
     });
 
-    websocket.on('message', async data => {
+    websocket.on('message', async (data) => {
       const raw = data as string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawMsg = JSON.parse(raw) as { type: string; [key: string]: any };
       switch (rawMsg.type) {
         case 'handshake': {
           logger.info('Handshake succeeded!');
 
-          getChannels(channelTypes, pairs, exchangeInfo, getChannel).forEach(channel => {
+          getChannels(channelTypes, pairs, exchangeInfo, getChannel).forEach((channel) => {
             websocket.send(
               JSON.stringify({
                 channel,
@@ -89,10 +90,10 @@ export default async function crawl(
               };
               return orderItem;
             };
-            rawOrderBookMsg.data.asks.reverse().forEach(text => {
+            rawOrderBookMsg.data.asks.reverse().forEach((text) => {
               msg.asks.push(parseOrder(text));
             });
-            rawOrderBookMsg.data.bids.forEach(text => {
+            rawOrderBookMsg.data.bids.forEach((text) => {
               msg.bids.push(parseOrder(text));
             });
             await msgCallback(msg);
@@ -107,7 +108,7 @@ export default async function crawl(
       }
     });
 
-    websocket.on('error', error => {
+    websocket.on('error', (error) => {
       logger!.error(JSON.stringify(error));
       process.exit(1); // fail fast, pm2 will restart it
     });

@@ -1,8 +1,8 @@
+import { Client, IFrame, Message } from '@stomp/stompjs';
 import { strict as assert } from 'assert';
 import { ExchangeInfo } from 'exchange-info';
-import { Client, IFrame, Message } from '@stomp/stompjs';
-import { OrderItem, OrderBookMsg, TradeMsg } from '../pojo/msg';
-import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
+import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
 import { initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'WhaleEx';
@@ -38,15 +38,15 @@ export default async function crawl(
     heartbeatIncoming: 3000,
     heartbeatOutgoing: 3000,
   });
-  client.onConnect = (frame: IFrame) => {
+  client.onConnect = (frame: IFrame): void => {
     if (frame.command === 'CONNECTED') {
       logger.info('Connected to Stomp successfully!');
     } else {
       throw Error('Error connecting to server!');
     }
 
-    channelTypes.forEach(channelType => {
-      pairs.forEach(pair => {
+    channelTypes.forEach((channelType) => {
+      pairs.forEach((pair) => {
         const channel = getChannel(channelType, pair, exchangeInfo);
         client.subscribe(channel, async (message: Message) => {
           assert.equal(message.command, 'MESSAGE');
@@ -59,7 +59,7 @@ export default async function crawl(
                 symbol: string;
                 asks: string[];
                 bids: string[];
-                [key: string]: any;
+                [key: string]: any; // eslint-disable-line @typescript-eslint/no-explicit-any
               };
               assert.equal(rawMsg.type, 'B');
 
@@ -129,7 +129,7 @@ export default async function crawl(
     });
   };
 
-  client.onStompError = (frame: IFrame) => {
+  client.onStompError = (frame: IFrame): void => {
     logger.error(frame);
   };
 

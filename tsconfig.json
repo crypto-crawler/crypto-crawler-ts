@@ -18,6 +18,7 @@
     "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
     "noImplicitAny": true,
 
+    "skipLibCheck": true,
     "lib": ["esnext", "dom"] /* dom for WebSocket */
   },
   "include": ["src/**/*.ts"],

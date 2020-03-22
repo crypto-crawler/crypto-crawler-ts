@@ -40,7 +40,7 @@ function getChannelType(channel: string): ChannelType {
 
 function buildPairMap(pairs: { [key: string]: PairInfo }): Map<string, PairInfo> {
   const result = new Map<string, PairInfo>();
-  Object.keys(pairs).forEach(p => {
+  Object.keys(pairs).forEach((p) => {
     const pairInfo = pairs[p];
     result.set(pairInfo.wsname, pairInfo);
   });
@@ -60,7 +60,7 @@ export default async function crawl(
 
   connect(
     exchangeInfo.websocket_endpoint,
-    data => {
+    (data) => {
       const raw = data as string;
       const rawMsg = JSON.parse(raw);
       if (
@@ -73,6 +73,7 @@ export default async function crawl(
       }
 
       if (rawMsg instanceof Array) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const arr = rawMsg as any[];
         const channel = arr[2] as string;
         const rawPair = arr[3] as string;
@@ -122,8 +123,8 @@ export default async function crawl(
                 bids: [],
                 full: true,
               };
-              orderbook.asks = rawFullOrderBookMsg.as.map(x => parseOrderItem(x));
-              orderbook.bids = rawFullOrderBookMsg.bs.map(x => parseOrderItem(x));
+              orderbook.asks = rawFullOrderBookMsg.as.map((x) => parseOrderItem(x));
+              orderbook.bids = rawFullOrderBookMsg.bs.map((x) => parseOrderItem(x));
               msgCallback(orderbook);
             } else {
               const rawOrderBookUpdateMsg = arr[1] as { a: string[][]; b: string[][] };
@@ -138,10 +139,10 @@ export default async function crawl(
                 full: false,
               };
               if (rawOrderBookUpdateMsg.a) {
-                orderbook.asks = rawOrderBookUpdateMsg.a.map(x => parseOrderItem(x));
+                orderbook.asks = rawOrderBookUpdateMsg.a.map((x) => parseOrderItem(x));
               }
               if (rawOrderBookUpdateMsg.b) {
-                orderbook.bids = rawOrderBookUpdateMsg.b.map(x => parseOrderItem(x));
+                orderbook.bids = rawOrderBookUpdateMsg.b.map((x) => parseOrderItem(x));
               }
               msgCallback(orderbook);
             }
@@ -150,7 +151,7 @@ export default async function crawl(
           case 'Trade': {
             const rawTradeMsgArray = arr[1] as string[][];
             assert.equal(rawTradeMsgArray[0].length, 6);
-            rawTradeMsgArray.forEach(async rawTradeMsg => {
+            rawTradeMsgArray.forEach(async (rawTradeMsg) => {
               assert.equal(rawTradeMsg.length, 6);
               const msg: TradeMsg = {
                 exchange: exchangeInfo.name,
@@ -172,9 +173,9 @@ export default async function crawl(
         }
       }
     },
-    channels.map(channel => ({
+    channels.map((channel) => ({
       event: 'subscribe',
-      pair: pairs.map(p => exchangeInfo.pairs[p].wsname),
+      pair: pairs.map((p) => exchangeInfo.pairs[p].wsname),
       subscription: {
         name: channel,
       },

@@ -59,7 +59,7 @@ export default async function crawl(
 
   connect(
     exchangeInfo.websocket_endpoint,
-    data => {
+    (data) => {
       const raw = Pako.inflateRaw(data as pako.Data, { to: 'string' });
       const obj = JSON.parse(raw);
       if (obj.event === 'error') {
@@ -75,7 +75,7 @@ export default async function crawl(
       }
       const rawMsg = obj as {
         table: string;
-        data: Array<any>;
+        data: Array<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
       };
 
       const channelType = getChannelType(rawMsg.table);
@@ -108,8 +108,8 @@ export default async function crawl(
             quantity: parseFloat(item[1]),
             cost: parseFloat(item[0]) * parseFloat(item[1]),
           });
-          orderBookMsg.asks = rawOrderBookMsg.data[0].asks.map(x => parse(x));
-          orderBookMsg.bids = rawOrderBookMsg.data[0].bids.map(x => parse(x));
+          orderBookMsg.asks = rawOrderBookMsg.data[0].asks.map((x) => parse(x));
+          orderBookMsg.bids = rawOrderBookMsg.data[0].bids.map((x) => parse(x));
 
           const bboMsg: BboMsg = {
             exchange: EXCHANGE_NAME,
@@ -155,8 +155,8 @@ export default async function crawl(
             quantity: parseFloat(item[1]),
             cost: parseFloat(item[0]) * parseFloat(item[1]),
           });
-          orderBookMsg.asks = rawOrderBookMsg.data[0].asks.map(x => parse(x));
-          orderBookMsg.bids = rawOrderBookMsg.data[0].bids.map(x => parse(x));
+          orderBookMsg.asks = rawOrderBookMsg.data[0].asks.map((x) => parse(x));
+          orderBookMsg.bids = rawOrderBookMsg.data[0].bids.map((x) => parse(x));
 
           msgCallback(orderBookMsg);
           break;
@@ -181,7 +181,7 @@ export default async function crawl(
             }>;
           };
 
-          const tickerMsges: TickerMsg[] = rawTickerMsg.data.map(x => {
+          const tickerMsges: TickerMsg[] = rawTickerMsg.data.map((x) => {
             return {
               exchange: EXCHANGE_NAME,
               channel: rawTickerMsg.table,
@@ -202,7 +202,7 @@ export default async function crawl(
             };
           });
 
-          tickerMsges.forEach(async tickerMsg => msgCallback(tickerMsg));
+          tickerMsges.forEach(async (tickerMsg) => msgCallback(tickerMsg));
           break;
         }
         case 'Trade': {
@@ -217,7 +217,7 @@ export default async function crawl(
               trade_id: string;
             }>;
           };
-          const tradeMsges: TradeMsg[] = rawTradeMsg.data.map(x => ({
+          const tradeMsges: TradeMsg[] = rawTradeMsg.data.map((x) => ({
             exchange: EXCHANGE_NAME,
             channel: rawMsg.table,
             pair: x.instrument_id.replace('-', '_'),
@@ -229,7 +229,7 @@ export default async function crawl(
             trade_id: x.trade_id,
           }));
 
-          tradeMsges.forEach(async tradeMsg => msgCallback(tradeMsg));
+          tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
           break;
         }
         default:

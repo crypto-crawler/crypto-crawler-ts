@@ -53,6 +53,6 @@ export interface BboMsg extends Msg {
 }
 
 // Specific data types for different exchanges
-export interface NewdexOrderMsg extends Msg {}
+export type NewdexOrderMsg = Msg;
 
 export interface GdaxMsg extends Msg, BaseOrder {}

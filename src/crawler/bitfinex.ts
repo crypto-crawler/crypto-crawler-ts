@@ -5,6 +5,7 @@ import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
 import { initBeforeCrawl } from './util';
 
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { WSv2 } = require('bitfinex-api-node');
 const { OrderBook } = require('bfx-api-node-models');
 
@@ -31,7 +32,7 @@ function getChannel(channeltype: ChannelType): string {
  * @param myArray {Array} array to split
  * @param chunk_size {int} Size of every group
  */
-function chunkArray<T>(myArray: T[], chunk_size: number) {
+function chunkArray<T>(myArray: T[], chunk_size: number): T[][] {
   let index = 0;
   const arrayLength = myArray.length;
   const tempArray = [];
@@ -50,13 +51,14 @@ function connect(
   logger: Logger,
   msgCallback: MsgCallback,
   arr: { channelType: ChannelType; pair: string }[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
   const ws = new WSv2({ transform: true, autoReconnect: true });
 
   ws.on('error', (err: Error) => logger.error(err));
 
   ws.on('open', () => {
-    arr.forEach(x => {
+    arr.forEach((x) => {
       const { channelType, pair } = x;
       const symbol = exchangeInfo.pairs[pair].raw_pair.toUpperCase();
       switch (channelType) {
@@ -75,7 +77,7 @@ function connect(
     });
   });
 
-  arr.forEach(x => {
+  arr.forEach((x) => {
     const { channelType, pair } = x;
     const symbol = `t${exchangeInfo.pairs[pair].raw_pair.toUpperCase()}`;
     const channel = getChannel(channelType);
@@ -103,20 +105,21 @@ function connect(
           { symbol },
           (trades: { id: number; mts: number; amount: number; price: number }[]) => {
             const tradeMsges = trades.map(parse);
-            tradeMsges.forEach(async tradeMsg => msgCallback(tradeMsg));
+            tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
           },
         );
         ws.onTradeEntry(
           { symbol },
           (trades: { id: number; mts: number; amount: number; price: number }[]) => {
             const tradeMsges = trades.map(parse);
-            tradeMsges.forEach(async tradeMsg => msgCallback(tradeMsg));
+            tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
           },
         );
         break;
       }
       case 'BBO':
       case 'OrderBook': {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ws.onOrderBook({ symbol, prec: 'P0' }, (orderbook: any) => {
           assert.ok(orderbook instanceof OrderBook);
           assert.ok(!orderbook.raw);
@@ -165,15 +168,15 @@ export default async function crawl(
   const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
 
   const arr: { channelType: ChannelType; pair: string }[] = [];
-  pairs.forEach(pair => {
-    channelTypes.forEach(channelType => {
+  pairs.forEach((pair) => {
+    channelTypes.forEach((channelType) => {
       arr.push({ channelType, pair });
     });
   });
 
   const groups = chunkArray<{ channelType: ChannelType; pair: string }>(arr, NUM_CHANNELS_PER_WS);
 
-  const wsClients = groups.map(g => connect(exchangeInfo, logger, msgCallback, g));
+  const wsClients = groups.map((g) => connect(exchangeInfo, logger, msgCallback, g));
 
-  await Promise.all(wsClients.map(ws => ws.open()));
+  await Promise.all(wsClients.map((ws) => ws.open()));
 }

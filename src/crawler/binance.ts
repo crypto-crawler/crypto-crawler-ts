@@ -1,8 +1,8 @@
 import { strict as assert } from 'assert';
 import { ExchangeInfo } from 'exchange-info';
+import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
 import { connect, getChannels, initBeforeCrawl } from './util';
-import { OrderItem, OrderBookMsg, TradeMsg, BboMsg } from '../pojo/msg';
-import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
 const EXCHANGE_NAME = 'Binance';
 
@@ -54,8 +54,9 @@ export default async function crawl(
   const websocketUrl = `${exchangeInfo.websocket_endpoint}/stream?streams=${channels.join('/')}`;
   connect(
     websocketUrl,
-    async data => {
+    async (data) => {
       const raw = data as string;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawMsg: { stream: string; data: { [key: string]: any } } = JSON.parse(raw);
       const channelType = getChannelType(rawMsg.stream);
       switch (channelType) {

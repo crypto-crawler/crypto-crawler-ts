@@ -54,7 +54,7 @@ export default async function crawl(
 
   connect(
     exchangeInfo.websocket_endpoint,
-    data => {
+    (data) => {
       const raw = Pako.ungzip(data as pako.Data, { to: 'string' });
       const obj = JSON.parse(raw);
       if (!obj.tick) {
@@ -63,6 +63,7 @@ export default async function crawl(
         return;
       }
       if (obj.ts && obj.ch && obj.tick) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const rawMsg = obj as { ch: string; ts: number; tick: { [key: string]: any } };
         const channelType = getChannelType(rawMsg.ch);
         switch (channelType) {
@@ -106,12 +107,12 @@ export default async function crawl(
               bids: [],
               full: true,
             };
-            orderBookMsg.asks = rawFullOrderBookMsg.asks.map(x => ({
+            orderBookMsg.asks = rawFullOrderBookMsg.asks.map((x) => ({
               price: x[0],
               quantity: x[1],
               cost: x[0] * x[1],
             }));
-            orderBookMsg.bids = rawFullOrderBookMsg.bids.map(x => ({
+            orderBookMsg.bids = rawFullOrderBookMsg.bids.map((x) => ({
               price: x[0],
               quantity: x[1],
               cost: x[0] * x[1],
@@ -132,7 +133,7 @@ export default async function crawl(
                 direction: 'buy' | 'sell';
               }>;
             };
-            const tradeMsges: TradeMsg[] = rawTradeMsg.data.map(x => ({
+            const tradeMsges: TradeMsg[] = rawTradeMsg.data.map((x) => ({
               exchange: exchangeInfo.name,
               channel: rawMsg.ch,
               pair: pairMap.get(rawMsg.ch.split('.')[1])!.normalized_pair,
@@ -144,7 +145,7 @@ export default async function crawl(
               trade_id: x.id.toString(), // TODO: bignumber
             }));
 
-            tradeMsges.forEach(async tradeMsg => msgCallback(tradeMsg));
+            tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
             break;
           }
           default:
@@ -154,7 +155,7 @@ export default async function crawl(
         logger.warn(obj);
       }
     },
-    channels.map(channel => ({ sub: channel, id: 'crypto-crawler' })),
+    channels.map((channel) => ({ sub: channel, id: 'crypto-crawler' })),
     logger,
   );
 }

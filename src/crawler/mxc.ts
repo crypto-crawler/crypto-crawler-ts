@@ -32,12 +32,12 @@ function crawlOnePair(
   channelTypes: ChannelType[],
   msgCallback: MsgCallback,
   logger: Logger,
-) {
+): void {
   const socket = io('wss://wbs.mxc.com', { reconnection: true, transports: ['websocket'] });
 
   socket.on('connect', () => {
     logger.info('Socket.IO connected');
-    channelTypes.forEach(channelType => {
+    channelTypes.forEach((channelType) => {
       const channel = getChannel(channelType);
       socket.emit(channel, { symbol: pair });
     });
@@ -51,7 +51,7 @@ function crawlOnePair(
 
   socket.on('push.symbol', (data: OrderBookAndTrades) => {
     if (data.data.deals && channelTypes.includes('Trade')) {
-      const tradeMsges: TradeMsg[] = data.data.deals.map(x => ({
+      const tradeMsges: TradeMsg[] = data.data.deals.map((x) => ({
         exchange: EXCHANGE_NAME,
         channel: 'sub.symbol',
         pair: data.symbol,
@@ -63,7 +63,7 @@ function crawlOnePair(
         trade_id: '', // TODO: MXC does NOT have trade ID
       }));
 
-      tradeMsges.forEach(async tradeMsg => msgCallback(tradeMsg));
+      tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
     }
 
     if ((data.data.asks || data.data.bids) && channelTypes.includes('OrderBookUpdate')) {
@@ -106,5 +106,5 @@ export default async function crawl(
   const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
   assert.ok(channels.length > 0);
 
-  pairs.forEach(pair => crawlOnePair(pair, channelTypes, msgCallback, logger));
+  pairs.forEach((pair) => crawlOnePair(pair, channelTypes, msgCallback, logger));
 }

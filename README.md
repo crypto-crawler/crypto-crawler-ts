@@ -5,10 +5,11 @@ Crawl orderbook and trade messages from crypto exchanges.
 ## How to use
 
 ```javascript
-const crawl = require('crypto-crawler').default; // eslint-disable-line import/no-unresolved
+/* eslint-disable */
+const crawl = require('crypto-crawler').default;
 
 function processMsgCallback(msg) {
-  console.dir(msg); // eslint-disable-line no-console
+  console.dir(msg);
 }
 
 (async () => {

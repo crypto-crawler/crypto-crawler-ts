@@ -30,6 +30,6 @@ console.info(chalk.green(figlet.textSync('Crypto Crawler')));
 
 const { exchange, channel_type, pairs } = argv;
 
-(async () => {
+(async (): Promise<void> => {
   await crawl(exchange, [channel_type as ChannelType], pairs);
 })();

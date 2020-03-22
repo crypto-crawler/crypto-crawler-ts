@@ -1,8 +1,8 @@
 import { strict as assert } from 'assert';
 import { ExchangeInfo } from 'exchange-info';
+import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
 import { connect, getChannels, initBeforeCrawl } from './util';
-import { OrderItem, OrderBookMsg, TradeMsg } from '../pojo/msg';
-import { ChannelType, MsgCallback, defaultMsgCallback } from './index';
 
 const EXCHANGE_NAME = 'Bitstamp';
 
@@ -47,11 +47,12 @@ export default async function crawl(
 
   connect(
     exchangeInfo.websocket_endpoint,
-    async text => {
+    async (text) => {
       const raw = text as string;
       const data = JSON.parse(raw) as {
         event: string;
         channel: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         data: { microtimestamp: string; [key: string]: any };
       };
       if (
@@ -102,8 +103,8 @@ export default async function crawl(
             orderItem.cost = orderItem.price * orderItem.quantity;
             return orderItem;
           };
-          orderBookMsg.asks = rawOrderBookMsg.data.asks.map(x => parseOrder(x));
-          orderBookMsg.bids = rawOrderBookMsg.data.bids.map(x => parseOrder(x));
+          orderBookMsg.asks = rawOrderBookMsg.data.asks.map((x) => parseOrder(x));
+          orderBookMsg.bids = rawOrderBookMsg.data.bids.map((x) => parseOrder(x));
 
           msgCallback(orderBookMsg);
           break;
@@ -145,7 +146,7 @@ export default async function crawl(
           logger.warn(data);
       }
     },
-    channels.map(channel => ({
+    channels.map((channel) => ({
       event: 'bts:subscribe',
       data: {
         channel,

@@ -12,8 +12,8 @@ export function getChannels(
   getChannel: (channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo) => string,
 ): string[] {
   const channels: string[] = [];
-  channelTypes.forEach(channelType => {
-    pairs.forEach(pair => {
+  channelTypes.forEach((channelType) => {
+    pairs.forEach((pair) => {
       const channel = getChannel(channelType, pair, exchangeInfo);
       channels.push(channel);
     });
@@ -25,6 +25,7 @@ export function getChannels(
 export function connect(
   url: string,
   onMessage: (data: WebSocket.Data) => void,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subscriptions?: Array<{ [key: string]: any }>,
   logger?: Logger,
 ): void {
@@ -38,13 +39,13 @@ export function connect(
     logger!.info(`${websocket.url} connected`);
 
     if (subscriptions !== undefined) {
-      subscriptions.forEach(x => {
+      subscriptions.forEach((x) => {
         websocket.send(JSON.stringify(x));
       });
     }
   });
 
-  websocket.on('message', data => {
+  websocket.on('message', (data) => {
     // Huobi
     if (url.includes('huobi.pro')) {
       const raw = Pako.ungzip(data as pako.Data, { to: 'string' });
@@ -75,7 +76,7 @@ export function connect(
     onMessage(data);
   });
 
-  websocket.on('error', error => {
+  websocket.on('error', (error) => {
     logger!.error(JSON.stringify(error));
     process.exit(1); // fail fast, pm2 will restart it
   });
@@ -89,7 +90,7 @@ export function connect(
 
 export function buildPairMap(pairs: { [key: string]: PairInfo }): Map<string, PairInfo> {
   const result = new Map<string, PairInfo>();
-  Object.keys(pairs).forEach(p => {
+  Object.keys(pairs).forEach((p) => {
     const pairInfo = pairs[p];
     result.set(pairInfo.raw_pair, pairInfo);
   });

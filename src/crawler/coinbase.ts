@@ -26,16 +26,16 @@ export default async function crawl(
   const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
 
   const idToPairInfoMap: { [key: string]: PairInfo } = {};
-  pairs.forEach(p => {
+  pairs.forEach((p) => {
     const pairInfo = exchangeInfo.pairs[p];
     idToPairInfoMap[pairInfo.id as string] = pairInfo;
   });
 
-  const channels = channelTypes.map(x => getChannel(x));
+  const channels = channelTypes.map((x) => getChannel(x));
   assert.ok(channels.length > 0);
 
   const websocket = new WebsocketClient(
-    pairs.map(p => exchangeInfo.pairs[p].raw_pair as string),
+    pairs.map((p) => exchangeInfo.pairs[p].raw_pair as string),
     exchangeInfo.websocket_endpoint,
     undefined,
     { channels },
@@ -44,6 +44,7 @@ export default async function crawl(
   websocket.on('open', () => {
     logger.info(`${exchangeInfo.websocket_endpoint} connected`);
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   websocket.on('message', (data: { type: string; [key: string]: any }) => {
     if (data.type === 'error') {
       logger.error(data);
@@ -87,8 +88,8 @@ export default async function crawl(
           orderItem.cost = orderItem.price * orderItem.quantity;
           return orderItem;
         };
-        orderBookMsg.asks = rawFullOrderBook.asks.map(x => parseOrder(x));
-        orderBookMsg.bids = rawFullOrderBook.bids.map(x => parseOrder(x));
+        orderBookMsg.asks = rawFullOrderBook.asks.map((x) => parseOrder(x));
+        orderBookMsg.bids = rawFullOrderBook.bids.map((x) => parseOrder(x));
 
         msgCallback(orderBookMsg);
         break;
@@ -99,6 +100,7 @@ export default async function crawl(
           exchange: exchangeInfo.name,
           channel: 'level2',
           pair: idToPairInfoMap[rawOrderBookUpdate.product_id].normalized_pair,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           timestamp: new Date((rawOrderBookUpdate as any).time as string).getTime(),
           raw: JSON.stringify(rawOrderBookUpdate),
           asks: [],
@@ -119,9 +121,9 @@ export default async function crawl(
             },
           };
         };
-        const orders = rawOrderBookUpdate.changes.map(x => parse(x));
-        orderBookMsg.asks = orders.filter(x => x.side).map(x => x.order);
-        orderBookMsg.bids = orders.filter(x => !x.side).map(x => x.order);
+        const orders = rawOrderBookUpdate.changes.map((x) => parse(x));
+        orderBookMsg.asks = orders.filter((x) => x.side).map((x) => x.order);
+        orderBookMsg.bids = orders.filter((x) => !x.side).map((x) => x.order);
 
         msgCallback(orderBookMsg);
         break;
@@ -146,7 +148,7 @@ export default async function crawl(
         logger.warn(`Unrecognized type: ${data.type}`);
     }
   });
-  websocket.on('error', error => {
+  websocket.on('error', (error) => {
     logger.error(JSON.stringify(error));
     process.exit(1); // fail fast, pm2 will restart it
   });
