@@ -1,3 +1,8 @@
+import fetchMarkets, {
+  Market,
+  MarketType,
+  SupportedExchange as MarketSupportedExchange,
+} from 'crypto-markets';
 import getExchangeInfo, { ExchangeInfo, PairInfo, SupportedExchange } from 'exchange-info';
 import Pako from 'pako';
 import { Logger } from 'winston';
@@ -16,6 +21,28 @@ export function getChannels(
     pairs.forEach((pair) => {
       const channel = getChannel(channelType, pair, exchangeInfo);
       channels.push(channel);
+    });
+  });
+  return channels;
+}
+
+export function getChannelsNew(
+  marketType: MarketType,
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
+  markets: readonly Market[],
+  getChannel: (
+    marketType: MarketType,
+    channeltype: ChannelType,
+    pair: string,
+    markets: readonly Market[],
+  ) => readonly string[],
+): readonly string[] {
+  const channels: string[] = [];
+  channelTypes.forEach((channelType) => {
+    pairs.forEach((pair) => {
+      const channel = getChannel(marketType, channelType, pair, markets);
+      channels.push(...channel);
     });
   });
   return channels;
@@ -97,6 +124,14 @@ export function buildPairMap(pairs: { [key: string]: PairInfo }): Map<string, Pa
   return result;
 }
 
+export function buildMarketMap(markets: readonly Market[]): Map<string, Market> {
+  const result = new Map<string, Market>();
+  markets.forEach((market) => {
+    result.set(market.id, market);
+  });
+  return result;
+}
+
 export async function initBeforeCrawl(
   exchange: SupportedExchange,
   pairs: string[] = [],
@@ -128,4 +163,38 @@ export async function initBeforeCrawl(
   logger.info(pairs);
 
   return [logger, exchangeInfo!, pairMap];
+}
+
+export async function initBeforeCrawlNew(
+  exchange: MarketSupportedExchange,
+  pairs: readonly string[],
+  marketType: MarketType = 'Spot',
+): Promise<[Logger, readonly Market[], Map<string, Market>]> {
+  const logger = createLogger(exchange);
+
+  let error: Error | undefined;
+  let markets: readonly Market[] = [];
+  // retry 3 times
+  for (let i = 0; i < 3; i += 1) {
+    try {
+      markets = await fetchMarkets(exchange, marketType); // eslint-disable-line no-await-in-loop
+      break;
+    } catch (e) {
+      error = e;
+    }
+  }
+  if (error) {
+    throw error;
+  }
+
+  // id -> Market
+  const marketMap = buildMarketMap(markets);
+  // empty means all pairs
+  // if (pairs.length === 0) {
+  //   // clear pairs and copy all pairs into it
+  //   pairs.splice(0, pairs.length, ...markets.map((x) => x.pair));
+  // }
+  logger.info(pairs);
+
+  return [logger, markets, marketMap];
 }

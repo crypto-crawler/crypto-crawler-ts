@@ -1,21 +1,30 @@
 import { strict as assert } from 'assert';
-import { ExchangeInfo } from 'exchange-info';
+import { Market, MarketType } from 'crypto-markets';
 import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
-import { connect, getChannels, initBeforeCrawl } from './util';
+import { connect, getChannelsNew, initBeforeCrawlNew } from './util';
 
 const EXCHANGE_NAME = 'Binance';
+const WEBSOCKET_ENDPOINT_SPOT = 'wss://stream.binance.com:9443';
+const WEBSOCKET_ENDPOINT_FUTURES = 'wss://fstream.binance.com';
 
-function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
-  const pairInfo = exchangeInfo.pairs[pair];
-  const rawPair = pairInfo.raw_pair.toLowerCase();
+function getChannel(
+  marketType: MarketType,
+  channeltype: ChannelType,
+  pair: string,
+  markets: readonly Market[],
+): readonly string[] {
+  const market = markets.filter((x) => x.pair === pair && x.marketType === marketType)[0];
+  assert.ok(market, `${EXCHANGE_NAME} Spot market does NOT have ${pair}`);
+
+  const rawPair = market.id.toLowerCase();
   switch (channeltype) {
     case 'BBO':
-      return `${rawPair}@bookTicker`;
+      return [`${rawPair}@bookTicker`];
     case 'OrderBookUpdate':
-      return `${rawPair}@depth`;
+      return [`${rawPair}@depth`];
     case 'Trade':
-      return `${rawPair}@trade`;
+      return [`${rawPair}@trade`];
     default:
       throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
@@ -42,16 +51,22 @@ function getChannelType(channel: string): ChannelType {
 }
 
 export default async function crawl(
-  channelTypes: ChannelType[],
-  pairs: string[] = [],
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
+  marketType: MarketType = 'Spot',
 ): Promise<void> {
-  const [logger, exchangeInfo, pairMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  assert.ok(['Spot', 'Swap'].includes(marketType), 'Binance has only Spot and Swap markets');
 
-  const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
+  const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
+
+  const channels = getChannelsNew(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
 
-  const websocketUrl = `${exchangeInfo.websocket_endpoint}/stream?streams=${channels.join('/')}`;
+  const websocketUrl = `${
+    marketType === 'Spot' ? WEBSOCKET_ENDPOINT_SPOT : WEBSOCKET_ENDPOINT_FUTURES
+  }/stream?streams=${channels.join('/')}`;
+
   connect(
     websocketUrl,
     async (data) => {
@@ -70,9 +85,11 @@ export default async function crawl(
             A: string; // best ask qty
           };
           const msg: BboMsg = {
-            exchange: exchangeInfo.name,
+            exchange: EXCHANGE_NAME,
+            marketType,
+            pair: marketMap.get(rawBookTickerMsg.s)!.pair,
+            rawPair: rawBookTickerMsg.s,
             channel: rawMsg.stream,
-            pair: pairMap.get(rawBookTickerMsg.s)!.normalized_pair,
             timestamp: Date.now(),
             raw,
             bidPrice: parseFloat(rawBookTickerMsg.b),
@@ -95,9 +112,11 @@ export default async function crawl(
           };
           assert.equal(rawOrderbookMsg.e, 'depthUpdate');
           const msg: OrderBookMsg = {
-            exchange: exchangeInfo.name,
+            exchange: EXCHANGE_NAME,
+            marketType,
             channel: rawMsg.stream,
-            pair: pairMap.get(rawOrderbookMsg.s)!.normalized_pair,
+            pair: marketMap.get(rawOrderbookMsg.s)!.pair,
+            rawPair: rawOrderbookMsg.s,
             timestamp: rawOrderbookMsg.E,
             raw,
             asks: [],
@@ -135,9 +154,11 @@ export default async function crawl(
           };
           assert.equal(rawTradeMsg.e, 'trade');
           const msg: TradeMsg = {
-            exchange: exchangeInfo.name,
+            exchange: EXCHANGE_NAME,
+            marketType,
             channel: rawMsg.stream,
-            pair: pairMap.get(rawTradeMsg.s)!.normalized_pair,
+            pair: marketMap.get(rawTradeMsg.s)!.pair,
+            rawPair: rawTradeMsg.s,
             timestamp: rawTradeMsg.T,
             raw,
             price: parseFloat(rawTradeMsg.p),

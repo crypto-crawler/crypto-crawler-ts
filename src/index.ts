@@ -1,3 +1,4 @@
+import { MarketType } from 'crypto-markets';
 import { ChannelType, defaultMsgCallback, MsgCallback } from './crawler';
 import crawlBinance from './crawler/binance';
 import crawlBitfinex from './crawler/bitfinex';
@@ -13,17 +14,18 @@ import crawlWhaleEx from './crawler/whaleex';
 /**
  * Crawl messages from a crypto exchange.
  *
- * @export
- * @param {string} exchange The crypto exchange name
- * @param {ChannelType[]} channelTypes types of channels you want to crawl
- * @param {string[]} [pairs=[]] pairs you want to crawl
- * @param {ProcessMessageCallback} [processMsgCallback=defaultProcessMessageCallback] the callback to process messages
- * @returns {Promise<void>}
+ * @param exchange The crypto exchange name
+ * @param marketType Market type, e.g., Spot, Futures
+ * @param channelTypes Channel types to crawl, e.g., Trade, BBO, OrderBook
+ * @param pairs Trading pairs, e.g., BTC_USDT
+ * @param msgCallback The callback function to process messages
+ * @returns void
  */
 export default async function crawl(
   exchange: string,
+  marketType: MarketType,
   channelTypes: ChannelType[],
-  pairs: string[] = [], // empty means all
+  pairs: string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   if (pairs.length > 0) {
@@ -32,7 +34,7 @@ export default async function crawl(
 
   switch (exchange) {
     case 'Binance':
-      return crawlBinance(channelTypes, pairs, msgCallback);
+      return crawlBinance(channelTypes, pairs, msgCallback, marketType);
     case 'Bitfinex':
       return crawlBitfinex(channelTypes, pairs, msgCallback);
     case 'Bitstamp':

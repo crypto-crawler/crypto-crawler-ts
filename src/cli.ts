@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import chalk from 'chalk';
+import { MarketType, MARKET_TYPES } from 'crypto-markets';
 import figlet from 'figlet';
 import yargs from 'yargs';
 import { ChannelType, CHANNEL_TYPES, EXCHANGES } from './crawler';
@@ -11,25 +12,28 @@ const { argv } = yargs.options({
     choices: EXCHANGES,
     type: 'string',
     demandOption: true,
-    default: 'Newdex',
+    default: 'Binance',
   },
-  channel_type: {
+  marketType: {
+    choices: MARKET_TYPES,
+    type: 'string',
+    default: 'Spot',
+  },
+  channelType: {
     choices: CHANNEL_TYPES,
     type: 'string',
-    demandOption: true,
     default: 'OrderBook',
   },
   pairs: {
     type: 'array',
-    demandOption: true,
     default: ['BTC_USDT'],
   },
 });
 
 console.info(chalk.green(figlet.textSync('Crypto Crawler')));
 
-const { exchange, channel_type, pairs } = argv;
+const { exchange, marketType, channelType, pairs } = argv;
 
 (async (): Promise<void> => {
-  await crawl(exchange, [channel_type as ChannelType], pairs);
+  await crawl(exchange, marketType as MarketType, [channelType as ChannelType], pairs);
 })();
