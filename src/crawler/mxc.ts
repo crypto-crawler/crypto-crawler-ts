@@ -1,8 +1,9 @@
 import { strict as assert } from 'assert';
 import io from 'socket.io-client';
 import { Logger } from 'winston';
+import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
-import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
+import { defaultMsgCallback, MsgCallback } from './index';
 import { getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'MXC';

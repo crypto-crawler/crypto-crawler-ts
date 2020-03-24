@@ -7,8 +7,8 @@ import getExchangeInfo, { ExchangeInfo, PairInfo, SupportedExchange } from 'exch
 import Pako from 'pako';
 import { Logger } from 'winston';
 import WebSocket from 'ws';
+import { ChannelType } from '../pojo/channel_type';
 import createLogger from '../util/logger';
-import { ChannelType } from './index';
 
 export function getChannels(
   channelTypes: ChannelType[],

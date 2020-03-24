@@ -1,8 +1,9 @@
 import { strict as assert } from 'assert';
 import { ExchangeInfo, NewdexPairInfo } from 'exchange-info';
 import WebSocket from 'ws';
+import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem } from '../pojo/msg';
-import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
+import { defaultMsgCallback, MsgCallback } from './index';
 import { getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Newdex';

@@ -1,7 +1,8 @@
 import { strict as assert } from 'assert';
 import { ExchangeInfo } from 'exchange-info';
+import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
-import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
+import { defaultMsgCallback, MsgCallback } from './index';
 import { connect, getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Bitstamp';

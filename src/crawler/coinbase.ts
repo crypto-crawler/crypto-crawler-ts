@@ -1,8 +1,9 @@
 import { strict as assert } from 'assert';
 import { WebsocketClient, WebsocketMessage } from 'coinbase-pro';
 import { PairInfo } from 'exchange-info';
+import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
-import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
+import { defaultMsgCallback, MsgCallback } from './index';
 import { initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Coinbase';

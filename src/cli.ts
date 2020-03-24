@@ -4,8 +4,9 @@ import chalk from 'chalk';
 import { MarketType, MARKET_TYPES } from 'crypto-markets';
 import figlet from 'figlet';
 import yargs from 'yargs';
-import { ChannelType, CHANNEL_TYPES, EXCHANGES } from './crawler';
+import { EXCHANGES } from './crawler';
 import crawl from './index';
+import { ChannelType, CHANNEL_TYPES } from './pojo/channel_type';
 
 const { argv } = yargs.options({
   exchange: {

@@ -1,8 +1,9 @@
 import { strict as assert } from 'assert';
 import { ExchangeInfo } from 'exchange-info';
 import { Logger } from 'winston';
+import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
-import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
+import { defaultMsgCallback, MsgCallback } from './index';
 import { initBeforeCrawl } from './util';
 
 /* eslint-disable @typescript-eslint/no-var-requires */

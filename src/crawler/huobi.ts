@@ -1,8 +1,9 @@
 import { strict as assert } from 'assert';
 import { ExchangeInfo } from 'exchange-info';
 import Pako from 'pako';
+import { ChannelType } from '../pojo/channel_type';
 import { BboMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
-import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
+import { defaultMsgCallback, MsgCallback } from './index';
 import { connect, getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Huobi';

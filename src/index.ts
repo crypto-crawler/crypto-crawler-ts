@@ -1,5 +1,5 @@
 import { MarketType } from 'crypto-markets';
-import { ChannelType, defaultMsgCallback, MsgCallback } from './crawler';
+import { defaultMsgCallback, MsgCallback } from './crawler';
 import crawlBinance from './crawler/binance';
 import crawlBitfinex from './crawler/bitfinex';
 import crawlBitstamp from './crawler/bitstamp';
@@ -10,6 +10,7 @@ import crawlMXC from './crawler/mxc';
 import crawlNewdex from './crawler/newdex';
 import crawlOKExSpot from './crawler/okex_spot';
 import crawlWhaleEx from './crawler/whaleex';
+import { ChannelType } from './pojo/channel_type';
 
 /**
  * Crawl messages from a crypto exchange.
@@ -58,5 +59,6 @@ export default async function crawl(
   }
 }
 
-export { ChannelType, MsgCallback } from './crawler';
+export { MsgCallback } from './crawler';
+export { ChannelType } from './pojo/channel_type';
 export * from './pojo/msg';

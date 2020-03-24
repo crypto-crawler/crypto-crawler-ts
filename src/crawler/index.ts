@@ -1,16 +1,5 @@
 import { Msg } from '../pojo/msg';
 
-export const CHANNEL_TYPES = [
-  'BBO',
-  'FullOrderBook',
-  'KLine',
-  'OrderBook', // first is full, followed by updates
-  'OrderBookUpdate',
-  'Ticker',
-  'Trade',
-] as const;
-export type ChannelType = typeof CHANNEL_TYPES[number];
-
 export const EXCHANGES = [
   'Binance',
   'Bitfinex',

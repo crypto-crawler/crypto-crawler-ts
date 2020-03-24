@@ -1,7 +1,8 @@
 import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
+import { ChannelType } from '../pojo/channel_type';
 import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
-import { ChannelType, defaultMsgCallback, MsgCallback } from './index';
+import { defaultMsgCallback, MsgCallback } from './index';
 import { connect, getChannelsNew, initBeforeCrawlNew } from './util';
 
 const EXCHANGE_NAME = 'Binance';
