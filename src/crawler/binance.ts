@@ -7,7 +7,7 @@ import { connect, getChannelsNew, initBeforeCrawlNew } from './util';
 
 const EXCHANGE_NAME = 'Binance';
 const WEBSOCKET_ENDPOINT_SPOT = 'wss://stream.binance.com:9443';
-const WEBSOCKET_ENDPOINT_FUTURES = 'wss://fstream.binance.com';
+const WEBSOCKET_ENDPOINT_SWAP = 'wss://fstream.binance.com';
 
 function getChannel(
   marketType: MarketType,
@@ -65,7 +65,7 @@ export default async function crawl(
   assert.ok(channels.length > 0);
 
   const websocketUrl = `${
-    marketType === 'Spot' ? WEBSOCKET_ENDPOINT_SPOT : WEBSOCKET_ENDPOINT_FUTURES
+    marketType === 'Spot' ? WEBSOCKET_ENDPOINT_SPOT : WEBSOCKET_ENDPOINT_SWAP
   }/stream?streams=${channels.join('/')}`;
 
   connect(
