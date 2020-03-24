@@ -19,7 +19,7 @@ interface OrderBookAndTrades {
 
 function getChannel(channeltype: ChannelType): string {
   switch (channeltype) {
-    case 'OrderBookUpdate':
+    case 'OrderBook':
     case 'Trade':
       return 'sub.symbol';
     default:
@@ -70,7 +70,7 @@ function crawlOnePair(
       tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
     }
 
-    if ((data.data.asks || data.data.bids) && channelTypes.includes('OrderBookUpdate')) {
+    if ((data.data.asks || data.data.bids) && channelTypes.includes('OrderBook')) {
       const orderBookMsg: OrderBookMsg = {
         exchange: EXCHANGE_NAME,
         marketType: 'Spot',

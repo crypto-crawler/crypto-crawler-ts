@@ -14,7 +14,7 @@ Object.assign(global, { WebSocket: require('ws') }); // eslint-disable-line glob
 function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
   const pairInfo = exchangeInfo.pairs[pair];
   switch (channeltype) {
-    case 'FullOrderBook':
+    case 'OrderBook':
       return `/${pairInfo.raw_pair}@depth5`;
     case 'Trade':
       return `/${pairInfo.raw_pair}@trade`;
@@ -53,7 +53,7 @@ export default async function crawl(
           assert.equal(message.command, 'MESSAGE');
           assert.equal(channel, message.headers.destination);
           switch (channelType) {
-            case 'FullOrderBook': {
+            case 'OrderBook': {
               const rawMsg = JSON.parse(message.body) as {
                 type: string;
                 timestamp: string;

@@ -14,7 +14,7 @@ function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: Exchan
   switch (channeltype) {
     case 'BBO':
       return `market.${rawPair}.bbo`;
-    case 'FullOrderBook':
+    case 'OrderBook':
       return `market.${rawPair}.depth.step0`;
     case 'Trade':
       return `market.${rawPair}.trade.detail`;
@@ -32,7 +32,7 @@ function getChannelType(channel: string): ChannelType {
       result = 'BBO';
       break;
     case 'depth':
-      result = 'FullOrderBook';
+      result = 'OrderBook';
       break;
     case 'trade':
       result = 'Trade';
@@ -94,7 +94,7 @@ export default async function crawl(
             msgCallback(bboMsg);
             break;
           }
-          case 'FullOrderBook': {
+          case 'OrderBook': {
             const rawFullOrderBookMsg = rawMsg.tick as {
               bids: number[][];
               asks: number[][];

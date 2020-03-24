@@ -1,6 +1,6 @@
 {
   "name": "crypto-crawler",
-  "version": "2.4.7",
+  "version": "2.4.8",
   "description": "Crawl orderbook and trade messages from crypto exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

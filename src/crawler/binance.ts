@@ -22,7 +22,7 @@ function getChannel(
   switch (channeltype) {
     case 'BBO':
       return [`${rawPair}@bookTicker`];
-    case 'OrderBookUpdate':
+    case 'OrderBook':
       return [`${rawPair}@depth`];
     case 'Trade':
       return [`${rawPair}@trade`];
@@ -40,7 +40,7 @@ function getChannelType(channel: string): ChannelType {
       result = 'BBO';
       break;
     case 'depth':
-      result = 'OrderBookUpdate';
+      result = 'OrderBook';
       break;
     case 'trade':
       result = 'Trade';
@@ -102,7 +102,7 @@ export default async function crawl(
           await msgCallback(msg);
           break;
         }
-        case 'OrderBookUpdate': {
+        case 'OrderBook': {
           const rawOrderbookMsg = rawMsg.data as {
             e: string;
             E: number;

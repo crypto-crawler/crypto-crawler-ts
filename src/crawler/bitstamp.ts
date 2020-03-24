@@ -11,9 +11,7 @@ function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: Exchan
   const pairInfo = exchangeInfo.pairs[pair];
   const rawPair = pairInfo.raw_pair;
   switch (channeltype) {
-    case 'FullOrderBook':
-      return `order_book_${rawPair}`;
-    case 'OrderBookUpdate':
+    case 'OrderBook':
       return `diff_order_book_${rawPair}`;
     case 'Trade':
       return `live_trades_${rawPair}`;
@@ -24,10 +22,8 @@ function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: Exchan
 
 function getChannelType(channel: string): ChannelType {
   let result: ChannelType | undefined;
-  if (channel.startsWith('order_book_')) {
-    result = 'FullOrderBook';
-  } else if (channel.startsWith('diff_order_book_')) {
-    result = 'OrderBookUpdate';
+  if (channel.startsWith('diff_order_book_')) {
+    result = 'OrderBook';
   } else if (channel.startsWith('live_trades_')) {
     result = 'Trade';
   } else {
@@ -72,8 +68,7 @@ export default async function crawl(
       const rawPair = data.channel.split('_').slice(-1)[0];
       const pair = pairMap.get(rawPair)!.normalized_pair;
       switch (channelType) {
-        case 'FullOrderBook':
-        case 'OrderBookUpdate': {
+        case 'OrderBook': {
           assert.equal(data.event, 'data');
           const rawOrderBookMsg = data as {
             event: string;
