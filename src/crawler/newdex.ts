@@ -74,9 +74,10 @@ export default async function crawl(
             const msg: OrderBookMsg = {
               exchange: exchangeInfo.name,
               marketType: 'Spot',
-              channel: rawOrderBookMsg.channel,
               pair: pairMap.get(rawPair)!.normalized_pair,
               rawPair,
+              channel: rawOrderBookMsg.channel,
+              channelType: 'OrderBook',
               timestamp: new Date().getTime(),
               raw,
               asks: [],

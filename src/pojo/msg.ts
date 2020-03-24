@@ -1,5 +1,6 @@
 import { BaseOrder } from 'coinbase-pro';
 import { MarketType } from 'crypto-markets';
+import { ChannelType } from './channel_type';
 
 /**
  * Root class for all messages.
@@ -10,6 +11,7 @@ export interface Msg {
   pair: string; // unified pair, from Market.pair, e.g., BTC_USDT
   rawPair: string; // exchange specific pair, from Market.id
   channel: string; // original websocket channel
+  channelType: ChannelType;
   timestamp: number; // Unix timestamp, in milliseconds
   raw: string; // the original message
 }

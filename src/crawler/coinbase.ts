@@ -75,6 +75,7 @@ export default async function crawl(
           pair: idToPairInfoMap[rawFullOrderBook.product_id].normalized_pair,
           rawPair: rawFullOrderBook.product_id,
           channel: 'level2',
+          channelType: 'OrderBook',
           timestamp: Date.now(),
           raw: JSON.stringify(rawFullOrderBook),
           asks: [],
@@ -105,6 +106,7 @@ export default async function crawl(
           pair: idToPairInfoMap[rawOrderBookUpdate.product_id].normalized_pair,
           rawPair: rawOrderBookUpdate.product_id,
           channel: 'level2',
+          channelType: 'OrderBook',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           timestamp: new Date((rawOrderBookUpdate as any).time as string).getTime(),
           raw: JSON.stringify(rawOrderBookUpdate),
@@ -138,9 +140,10 @@ export default async function crawl(
         const tradeMsg: TradeMsg = {
           exchange: exchangeInfo.name,
           marketType: 'Spot',
-          channel: 'matches',
           pair: idToPairInfoMap[rawTradeMsg.product_id].normalized_pair,
           rawPair: rawTradeMsg.product_id,
+          channel: 'matches',
+          channelType: 'Trade',
           timestamp: new Date(rawTradeMsg.time).getTime(),
           raw: JSON.stringify(rawTradeMsg),
           price: parseFloat(rawTradeMsg.price),
