@@ -53,8 +53,10 @@ function crawlOnePair(
     if (data.data.deals && channelTypes.includes('Trade')) {
       const tradeMsges: TradeMsg[] = data.data.deals.map((x) => ({
         exchange: EXCHANGE_NAME,
+        marketType: 'Spot',
         channel: 'sub.symbol',
         pair: data.symbol,
+        rawPair: data.symbol,
         timestamp: x.t,
         raw: JSON.stringify(x),
         price: parseFloat(x.p),
@@ -69,8 +71,10 @@ function crawlOnePair(
     if ((data.data.asks || data.data.bids) && channelTypes.includes('OrderBookUpdate')) {
       const orderBookMsg: OrderBookMsg = {
         exchange: EXCHANGE_NAME,
+        marketType: 'Spot',
         channel: 'sub.symbol',
         pair: data.symbol,
+        rawPair: data.symbol,
         timestamp: Date.now(),
         raw: JSON.stringify(data),
         asks: [],

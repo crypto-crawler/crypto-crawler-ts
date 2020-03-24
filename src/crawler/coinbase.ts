@@ -70,8 +70,10 @@ export default async function crawl(
         const rawFullOrderBook = data as WebsocketMessage.L2Snapshot;
         const orderBookMsg: OrderBookMsg = {
           exchange: exchangeInfo.name,
-          channel: 'level2',
+          marketType: 'Spot',
           pair: idToPairInfoMap[rawFullOrderBook.product_id].normalized_pair,
+          rawPair: rawFullOrderBook.product_id,
+          channel: 'level2',
           timestamp: Date.now(),
           raw: JSON.stringify(rawFullOrderBook),
           asks: [],
@@ -98,8 +100,10 @@ export default async function crawl(
         const rawOrderBookUpdate = data as WebsocketMessage.L2Update;
         const orderBookMsg: OrderBookMsg = {
           exchange: exchangeInfo.name,
-          channel: 'level2',
+          marketType: 'Spot',
           pair: idToPairInfoMap[rawOrderBookUpdate.product_id].normalized_pair,
+          rawPair: rawOrderBookUpdate.product_id,
+          channel: 'level2',
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           timestamp: new Date((rawOrderBookUpdate as any).time as string).getTime(),
           raw: JSON.stringify(rawOrderBookUpdate),
@@ -132,8 +136,10 @@ export default async function crawl(
         const rawTradeMsg = data as WebsocketMessage.Match;
         const tradeMsg: TradeMsg = {
           exchange: exchangeInfo.name,
+          marketType: 'Spot',
           channel: 'matches',
           pair: idToPairInfoMap[rawTradeMsg.product_id].normalized_pair,
+          rawPair: rawTradeMsg.product_id,
           timestamp: new Date(rawTradeMsg.time).getTime(),
           raw: JSON.stringify(rawTradeMsg),
           price: parseFloat(rawTradeMsg.price),

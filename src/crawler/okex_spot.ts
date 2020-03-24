@@ -95,8 +95,10 @@ export default async function crawl(
           assert.equal(rawOrderBookMsg.data.length, 1);
           const orderBookMsg: OrderBookMsg = {
             exchange: EXCHANGE_NAME,
+            marketType: 'Spot',
             channel: rawOrderBookMsg.table,
             pair: rawOrderBookMsg.data[0].instrument_id.replace('-', '_'),
+            rawPair: rawOrderBookMsg.data[0].instrument_id,
             timestamp: new Date(rawOrderBookMsg.data[0].timestamp).getTime(),
             raw,
             asks: [],
@@ -113,8 +115,10 @@ export default async function crawl(
 
           const bboMsg: BboMsg = {
             exchange: EXCHANGE_NAME,
+            marketType: 'Spot',
             channel: orderBookMsg.channel,
             pair: orderBookMsg.pair,
+            rawPair: orderBookMsg.rawPair,
             timestamp: orderBookMsg.timestamp,
             raw,
             bidPrice: orderBookMsg.bids[0].price,
@@ -142,8 +146,10 @@ export default async function crawl(
           assert.equal(rawOrderBookMsg.data.length, 1);
           const orderBookMsg: OrderBookMsg = {
             exchange: EXCHANGE_NAME,
+            marketType: 'Spot',
             channel: rawOrderBookMsg.table,
             pair: rawOrderBookMsg.data[0].instrument_id.replace('-', '_'),
+            rawPair: rawOrderBookMsg.data[0].instrument_id,
             timestamp: new Date(rawOrderBookMsg.data[0].timestamp).getTime(),
             raw,
             asks: [],
@@ -184,8 +190,10 @@ export default async function crawl(
           const tickerMsges: TickerMsg[] = rawTickerMsg.data.map((x) => {
             return {
               exchange: EXCHANGE_NAME,
+              marketType: 'Spot',
               channel: rawTickerMsg.table,
               pair: x.instrument_id.replace('-', '_'),
+              rawPair: x.instrument_id,
               timestamp: new Date(x.timestamp).getTime(),
               raw,
               last_price: parseFloat(x.last),
@@ -219,8 +227,10 @@ export default async function crawl(
           };
           const tradeMsges: TradeMsg[] = rawTradeMsg.data.map((x) => ({
             exchange: EXCHANGE_NAME,
+            marketType: 'Spot',
             channel: rawMsg.table,
             pair: x.instrument_id.replace('-', '_'),
+            rawPair: x.instrument_id,
             timestamp: new Date(x.timestamp).getTime(),
             raw,
             price: parseFloat(x.price),

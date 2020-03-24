@@ -78,8 +78,10 @@ export default async function crawl(
             };
             const bboMsg: BboMsg = {
               exchange: exchangeInfo.name,
+              marketType: 'Spot',
               channel: rawMsg.ch,
               pair: pairMap.get(rawBboMsg.symbol)!.normalized_pair,
+              rawPair: rawBboMsg.symbol,
               timestamp: rawMsg.ts,
               raw,
               bidPrice: parseFloat(rawBboMsg.bid),
@@ -99,8 +101,10 @@ export default async function crawl(
             };
             const orderBookMsg: OrderBookMsg = {
               exchange: exchangeInfo.name,
+              marketType: 'Spot',
               channel: rawMsg.ch,
               pair: pairMap.get(rawMsg.ch.split('.')[1])!.normalized_pair,
+              rawPair: rawMsg.ch.split('.')[1],
               timestamp: rawMsg.ts,
               raw,
               asks: [],
@@ -135,8 +139,10 @@ export default async function crawl(
             };
             const tradeMsges: TradeMsg[] = rawTradeMsg.data.map((x) => ({
               exchange: exchangeInfo.name,
+              marketType: 'Spot',
               channel: rawMsg.ch,
               pair: pairMap.get(rawMsg.ch.split('.')[1])!.normalized_pair,
+              rawPair: rawMsg.ch.split('.')[1],
               timestamp: x.ts,
               raw: JSON.stringify(x),
               price: x.price,

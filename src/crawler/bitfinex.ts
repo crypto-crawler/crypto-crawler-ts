@@ -91,8 +91,10 @@ function connect(
           price: number;
         }): TradeMsg => ({
           exchange: exchangeInfo.name,
-          channel,
+          marketType: 'Spot',
           pair,
+          rawPair: exchangeInfo.pairs[pair].raw_pair,
+          channel,
           timestamp: trade.mts,
           raw: JSON.stringify(trade),
           price: trade.price,
@@ -139,8 +141,10 @@ function connect(
 
           const orderBookMsg: OrderBookMsg = {
             exchange: exchangeInfo.name,
-            channel,
+            marketType: 'Spot',
             pair,
+            rawPair: exchangeInfo.pairs[pair].raw_pair,
+            channel,
             timestamp: Date.now(),
             raw: orderbook.serialize(),
             asks: orderbook.asks.map(parse),

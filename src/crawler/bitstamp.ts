@@ -85,8 +85,10 @@ export default async function crawl(
           };
           const orderBookMsg: OrderBookMsg = {
             exchange: exchangeInfo.name,
-            channel: rawOrderBookMsg.channel,
+            marketType: 'Spot',
             pair,
+            rawPair,
+            channel: rawOrderBookMsg.channel,
             timestamp: Math.floor(parseInt(rawOrderBookMsg.data.microtimestamp, 10) / 1000),
             raw,
             asks: [],
@@ -129,8 +131,10 @@ export default async function crawl(
           };
           const tradeMsg: TradeMsg = {
             exchange: exchangeInfo.name,
-            channel: rawTradeMsg.channel,
+            marketType: 'Spot',
             pair,
+            rawPair,
+            channel: rawTradeMsg.channel,
             timestamp: Math.floor(parseInt(rawTradeMsg.data.microtimestamp, 10) / 1000),
             raw,
             price: rawTradeMsg.data.price,

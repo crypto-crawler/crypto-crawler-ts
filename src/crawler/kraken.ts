@@ -85,8 +85,10 @@ export default async function crawl(
             assert.equal(rawBboMsg.length, 5);
             const bboMsg: BboMsg = {
               exchange: exchangeInfo.name,
+              marketType: 'Spot',
               channel,
               pair: normalizedPair,
+              rawPair,
               timestamp: Math.floor(parseFloat(rawBboMsg[2]) * 1000),
               raw,
               bidPrice: parseFloat(rawBboMsg[0]),
@@ -115,8 +117,10 @@ export default async function crawl(
               const rawFullOrderBookMsg = arr[1] as { as: string[][]; bs: string[][] };
               const orderbook: OrderBookMsg = {
                 exchange: exchangeInfo.name,
+                marketType: 'Spot',
                 channel,
                 pair: normalizedPair,
+                rawPair,
                 timestamp: Date.now(),
                 raw,
                 asks: [],
@@ -130,8 +134,10 @@ export default async function crawl(
               const rawOrderBookUpdateMsg = arr[1] as { a: string[][]; b: string[][] };
               const orderbook: OrderBookMsg = {
                 exchange: exchangeInfo.name,
+                marketType: 'Spot',
                 channel,
                 pair: normalizedPair,
+                rawPair,
                 timestamp: Date.now(),
                 raw,
                 asks: [],
@@ -155,8 +161,10 @@ export default async function crawl(
               assert.equal(rawTradeMsg.length, 6);
               const msg: TradeMsg = {
                 exchange: exchangeInfo.name,
+                marketType: 'Spot',
                 channel,
                 pair: normalizedPair,
+                rawPair,
                 timestamp: Math.floor(parseFloat(rawTradeMsg[2]) * 1000),
                 raw: JSON.stringify(rawTradeMsg),
                 price: parseFloat(rawTradeMsg[0]),
