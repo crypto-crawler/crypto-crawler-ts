@@ -14,8 +14,13 @@
     "start": "node ./dist/index.js",
     "lint": "eslint . --ext '.js,.jsx,.ts,.tsx,.md'",
     "prettier": "prettier -c --write '**/*'",
-    "prepublish": "npm run build && npm run lint && npm run prettier",
+    "prepare": "npm run build && npm run lint && npm run prettier",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run prepare"
+    }
   },
   "repository": {
     "type": "git",
@@ -54,6 +59,7 @@
     "eslint-plugin-jest": "^23.8.2",
     "eslint-plugin-markdown": "^1.0.2",
     "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^4.2.3",
     "prettier": "^2.0.2",
     "typescript": "^3.8.3"
   },
