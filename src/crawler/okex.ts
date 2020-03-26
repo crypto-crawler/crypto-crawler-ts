@@ -83,8 +83,6 @@ export default async function crawl(
   assert.ok(channels.length > 0);
   if (marketType === 'Spot') {
     assert.equal(channels.length, 1);
-  } else if (marketType === 'Futures') {
-    assert.equal(channels.length, 4);
   }
 
   connect(

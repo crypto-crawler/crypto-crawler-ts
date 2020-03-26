@@ -66,6 +66,9 @@ export default async function crawl(
 
   const channels = getChannelsNew(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
+  if (marketType === 'Spot') {
+    assert.equal(channels.length, 1);
+  }
 
   const websocketUrl = `${WEBSOCKET_ENDPOINTS[marketType]}/stream?streams=${channels.join('/')}`;
 
