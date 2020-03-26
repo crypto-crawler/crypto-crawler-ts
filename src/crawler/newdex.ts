@@ -79,7 +79,7 @@ export default async function crawl(
               channel: rawOrderBookMsg.channel,
               channelType: 'OrderBook',
               timestamp: new Date().getTime(),
-              raw,
+              raw: rawMsg,
               asks: [],
               bids: [],
               full: rawOrderBookMsg.data.full === 1,

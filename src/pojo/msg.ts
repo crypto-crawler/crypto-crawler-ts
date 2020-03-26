@@ -13,7 +13,8 @@ export interface Msg {
   channel: string; // original websocket channel
   channelType: ChannelType;
   timestamp: number; // Unix timestamp, in milliseconds
-  raw: string; // the original message
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  raw: { [key: string]: any }; // the original message
 }
 
 export interface TickerMsg extends Msg {

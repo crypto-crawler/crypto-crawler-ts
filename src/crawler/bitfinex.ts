@@ -98,7 +98,7 @@ function connect(
           channel,
           channelType,
           timestamp: trade.mts,
-          raw: JSON.stringify(trade),
+          raw: trade,
           price: trade.price,
           quantity: Math.abs(trade.amount),
           side: trade.amount < 0,
