@@ -59,7 +59,6 @@ function getChannel(
 }
 
 function getChannelType(channel: string): ChannelType {
-  assert.ok(channel.includes(''));
   const suffix = channel.split('.')[2];
   let result: ChannelType;
   switch (suffix) {

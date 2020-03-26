@@ -8,7 +8,7 @@ import crawlHuobi from './crawler/huobi';
 import crawlKraken from './crawler/kraken';
 import crawlMXC from './crawler/mxc';
 import crawlNewdex from './crawler/newdex';
-import crawlOKExSpot from './crawler/okex_spot';
+import crawlOKEx from './crawler/okex';
 import crawlWhaleEx from './crawler/whaleex';
 import { ChannelType } from './pojo/channel_type';
 
@@ -50,8 +50,8 @@ export default async function crawl(
       return crawlMXC(channelTypes, pairs, msgCallback);
     case 'Newdex':
       return crawlNewdex(channelTypes, pairs, msgCallback);
-    case 'OKEx_Spot':
-      return crawlOKExSpot(channelTypes, pairs, msgCallback);
+    case 'OKEx':
+      return crawlOKEx(marketType, channelTypes, pairs, msgCallback);
     case 'WhaleEx':
       return crawlWhaleEx(channelTypes, pairs, msgCallback);
     default:

@@ -9,7 +9,7 @@ export const EXCHANGES = [
   'Kraken',
   'MXC',
   'Newdex',
-  'OKEx_Spot',
+  'OKEx',
   'WhaleEx',
 ] as const;
 

@@ -1,28 +1,51 @@
 import { strict as assert } from 'assert';
-import { ExchangeInfo } from 'exchange-info';
+import { Market, MarketType } from 'crypto-markets';
 import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
 import { BboMsg, OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, getChannels, initBeforeCrawl } from './util';
+import { connect, getChannelsNew, initBeforeCrawlNew } from './util';
 
-const EXCHANGE_NAME = 'OKEx_Spot';
+const EXCHANGE_NAME = 'OKEx';
 
-function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
-  assert.equal(exchangeInfo.name, EXCHANGE_NAME);
-  const rawPair = pair.replace('_', '-');
-  switch (channeltype) {
-    case 'BBO':
-      return `spot/depth5:${rawPair}`;
-    case 'OrderBook':
-      return `spot/optimized_depth:${rawPair}`;
-    case 'Ticker':
-      return `spot/ticker:${rawPair}`;
-    case 'Trade':
-      return `spot/trade:${rawPair}`;
-    default:
-      throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
+const WEBSOCKET_ENDPOINT = 'wss://real.okex.com:8443/ws/v3';
+
+function getChannel(
+  marketType: MarketType,
+  channeltype: ChannelType,
+  pair: string,
+  markets: readonly Market[],
+): readonly string[] {
+  const marketsFiltered = markets.filter((x) => x.pair === pair && x.marketType === marketType);
+  assert.ok(
+    marketsFiltered.length > 0,
+    `${EXCHANGE_NAME} ${marketType} market does NOT have ${pair}`,
+  );
+  if (marketType === 'Spot') {
+    assert.equal(
+      marketsFiltered.length,
+      1,
+      `${EXCHANGE_NAME} ${marketType} market has more than one ${pair}`,
+    );
   }
+
+  const result: string[] = marketsFiltered.map((market) => {
+    const rawPair = market.id;
+    switch (channeltype) {
+      case 'BBO':
+        return `${marketType.toLowerCase()}/depth5:${rawPair}`;
+      case 'OrderBook':
+        return `${marketType.toLowerCase()}/optimized_depth:${rawPair}`;
+      case 'Ticker':
+        return `${marketType.toLowerCase()}/ticker:${rawPair}`;
+      case 'Trade':
+        return `${marketType.toLowerCase()}/trade:${rawPair}`;
+      default:
+        throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
+    }
+  });
+
+  return result;
 }
 
 function getChannelType(channel: string): ChannelType {
@@ -49,17 +72,23 @@ function getChannelType(channel: string): ChannelType {
 }
 
 export default async function crawl(
-  channelTypes: ChannelType[],
-  pairs: string[] = [],
+  marketType: MarketType,
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
 
-  const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
+  const channels = getChannelsNew(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
+  if (marketType === 'Spot') {
+    assert.equal(channels.length, 1);
+  } else if (marketType === 'Futures') {
+    assert.equal(channels.length, 4);
+  }
 
   connect(
-    exchangeInfo.websocket_endpoint,
+    WEBSOCKET_ENDPOINT,
     (data) => {
       const raw = Pako.inflateRaw(data as pako.Data, { to: 'string' });
       const obj = JSON.parse(raw);
@@ -96,8 +125,8 @@ export default async function crawl(
           assert.equal(rawOrderBookMsg.data.length, 1);
           const orderBookMsg: OrderBookMsg = {
             exchange: EXCHANGE_NAME,
-            marketType: 'Spot',
-            pair: rawOrderBookMsg.data[0].instrument_id.replace('-', '_'),
+            marketType,
+            pair: marketMap.get(rawOrderBookMsg.data[0].instrument_id)!.pair,
             rawPair: rawOrderBookMsg.data[0].instrument_id,
             channel: rawOrderBookMsg.table,
             channelType,
@@ -117,7 +146,7 @@ export default async function crawl(
 
           const bboMsg: BboMsg = {
             exchange: EXCHANGE_NAME,
-            marketType: 'Spot',
+            marketType,
             pair: orderBookMsg.pair,
             rawPair: orderBookMsg.rawPair,
             channel: orderBookMsg.channel,
@@ -149,8 +178,8 @@ export default async function crawl(
           assert.equal(rawOrderBookMsg.data.length, 1);
           const orderBookMsg: OrderBookMsg = {
             exchange: EXCHANGE_NAME,
-            marketType: 'Spot',
-            pair: rawOrderBookMsg.data[0].instrument_id.replace('-', '_'),
+            marketType,
+            pair: marketMap.get(rawOrderBookMsg.data[0].instrument_id)!.pair,
             rawPair: rawOrderBookMsg.data[0].instrument_id,
             channel: rawOrderBookMsg.table,
             channelType,
@@ -194,8 +223,8 @@ export default async function crawl(
           const tickerMsges: TickerMsg[] = rawTickerMsg.data.map((x) => {
             return {
               exchange: EXCHANGE_NAME,
-              marketType: 'Spot',
-              pair: x.instrument_id.replace('-', '_'),
+              marketType,
+              pair: marketMap.get(x.instrument_id)!.pair,
               rawPair: x.instrument_id,
               channel: rawTickerMsg.table,
               channelType,
@@ -232,8 +261,8 @@ export default async function crawl(
           };
           const tradeMsges: TradeMsg[] = rawTradeMsg.data.map((x) => ({
             exchange: EXCHANGE_NAME,
-            marketType: 'Spot',
-            pair: x.instrument_id.replace('-', '_'),
+            marketType,
+            pair: marketMap.get(x.instrument_id)!.pair,
             rawPair: x.instrument_id,
             channel: rawMsg.table,
             channelType,
