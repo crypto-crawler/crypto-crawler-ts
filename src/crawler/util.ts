@@ -74,7 +74,7 @@ export function connect(
 
   websocket.on('message', (data) => {
     // Huobi
-    if (url.includes('huobi.pro')) {
+    if (url.includes('huobi.pro') || url.includes('hbdm.com')) {
       const raw = Pako.ungzip(data as pako.Data, { to: 'string' });
       const obj = JSON.parse(raw);
       if (obj.ping) {

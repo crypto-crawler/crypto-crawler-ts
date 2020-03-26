@@ -35,7 +35,7 @@ export default async function crawl(
 
   switch (exchange) {
     case 'Binance':
-      return crawlBinance(channelTypes, pairs, msgCallback, marketType);
+      return crawlBinance(marketType, channelTypes, pairs, msgCallback);
     case 'Bitfinex':
       return crawlBitfinex(channelTypes, pairs, msgCallback);
     case 'Bitstamp':
@@ -43,7 +43,7 @@ export default async function crawl(
     case 'Coinbase':
       return crawlCoinbase(channelTypes, pairs, msgCallback);
     case 'Huobi':
-      return crawlHuobi(channelTypes, pairs, msgCallback);
+      return crawlHuobi(marketType, channelTypes, pairs, msgCallback);
     case 'Kraken':
       return crawlKraken(channelTypes, pairs, msgCallback);
     case 'MXC':
