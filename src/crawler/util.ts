@@ -53,7 +53,7 @@ export function connect(
   url: string,
   onMessage: (data: WebSocket.Data) => void,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  subscriptions?: Array<{ [key: string]: any }>,
+  subscriptions?: readonly { [key: string]: any }[],
   logger?: Logger,
 ): void {
   const websocket = new WebSocket(url);
