@@ -25,7 +25,7 @@ function getChannel(
   pair: string,
   markets: readonly Market[],
 ): readonly string[] {
-  const marketsFiltered = markets.filter((x) => x.pair === pair && x.marketType === marketType);
+  const marketsFiltered = markets.filter((x) => x.pair === pair && x.type === marketType);
   assert.ok(
     marketsFiltered.length > 0,
     `${EXCHANGE_NAME} ${marketType} market does NOT have ${pair}`,
@@ -40,7 +40,7 @@ function getChannel(
 
   const result: string[] = marketsFiltered.map((market) => {
     const rawPair =
-      market.marketType === 'Spot'
+      market.type === 'Spot'
         ? market.id.toLowerCase()
         : `${market.base}_${contractTypes[market.info.contract_type]}`;
     switch (channeltype) {
@@ -94,7 +94,7 @@ export default async function crawl(
   const marketMapFutures = new Map<string, Market>();
   if (marketType === 'Futures') {
     markets
-      .filter((x) => x.marketType === 'Futures')
+      .filter((x) => x.type === 'Futures')
       .forEach((market) => {
         const rawPair = `${market.base}_${contractTypes[market.info.contract_type]}`;
         marketMapFutures.set(rawPair, market);

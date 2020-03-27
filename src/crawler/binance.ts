@@ -18,7 +18,7 @@ function getChannel(
   pair: string,
   markets: readonly Market[],
 ): readonly string[] {
-  const market = markets.filter((x) => x.pair === pair && x.marketType === marketType)[0];
+  const market = markets.filter((x) => x.pair === pair && x.type === marketType)[0];
   assert.ok(market, `${EXCHANGE_NAME} Spot market does NOT have ${pair}`);
 
   const rawPair = market.id.toLowerCase();
