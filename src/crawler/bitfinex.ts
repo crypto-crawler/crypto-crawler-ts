@@ -1,14 +1,14 @@
 import { strict as assert } from 'assert';
-import { ExchangeInfo } from 'exchange-info';
+import { Market, MarketType } from 'crypto-markets';
 import { Logger } from 'winston';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { initBeforeCrawl } from './util';
+import { initBeforeCrawlNew } from './util';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { WSv2 } = require('bitfinex-api-node');
-const { OrderBook } = require('bfx-api-node-models');
+const { OrderBook, PublicTrade } = require('bfx-api-node-models');
 
 const EXCHANGE_NAME = 'Bitfinex';
 const NUM_CHANNELS_PER_WS = 30; // This is for error 10305, see https://www.bitfinex.com/posts/381
@@ -48,7 +48,7 @@ function chunkArray<T>(myArray: T[], chunk_size: number): T[][] {
 }
 
 function connect(
-  exchangeInfo: ExchangeInfo,
+  markets: readonly Market[],
   logger: Logger,
   msgCallback: MsgCallback,
   arr: { channelType: ChannelType; pair: string }[],
@@ -61,7 +61,9 @@ function connect(
   ws.on('open', () => {
     arr.forEach((x) => {
       const { channelType, pair } = x;
-      const symbol = exchangeInfo.pairs[pair].raw_pair.toUpperCase();
+      const symbol = markets
+        .filter((m) => m.type === 'Spot' && m.pair === pair)[0]
+        .id.toUpperCase();
       switch (channelType) {
         case 'Trade':
           ws.subscribeTrades(symbol);
@@ -80,7 +82,10 @@ function connect(
 
   arr.forEach((x) => {
     const { channelType, pair } = x;
-    const symbol = `t${exchangeInfo.pairs[pair].raw_pair.toUpperCase()}`;
+    const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
+    assert.ok(market);
+    assert.equal(pair, market.pair);
+    const symbol = `t${market.id.toUpperCase()}`;
     const channel = getChannel(channelType);
 
     switch (channelType) {
@@ -91,34 +96,42 @@ function connect(
           amount: number;
           price: number;
         }): TradeMsg => ({
-          exchange: exchangeInfo.name,
+          exchange: EXCHANGE_NAME,
           marketType: 'Spot',
           pair,
-          rawPair: exchangeInfo.pairs[pair].raw_pair,
+          rawPair: market.id,
           channel,
           channelType,
           timestamp: trade.mts,
-          raw: trade,
+          raw: trade instanceof PublicTrade ? (trade as any).serialize() : trade, // eslint-disable-line @typescript-eslint/no-explicit-any
           price: trade.price,
           quantity: Math.abs(trade.amount),
           side: trade.amount < 0,
           trade_id: trade.id.toString(),
         });
 
-        ws.onTrades(
-          { symbol },
-          (trades: { id: number; mts: number; amount: number; price: number }[]) => {
-            const tradeMsges = trades.map(parse);
-            tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
-          },
-        );
-        ws.onTradeEntry(
-          { symbol },
-          (trades: { id: number; mts: number; amount: number; price: number }[]) => {
-            const tradeMsges = trades.map(parse);
-            tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
-          },
-        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ws.onTrades({ symbol }, async (trades: any) => {
+          assert.ok(trades instanceof PublicTrade);
+          if (trades.length) {
+            for (let i = 0; i < trades.length; i += 1) {
+              await msgCallback(parse(trades[i])); // eslint-disable-line no-await-in-loop
+            }
+          } else {
+            await msgCallback(parse(trades));
+          }
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ws.onTradeEntry({ symbol }, async (trades: any) => {
+          assert.ok(trades instanceof PublicTrade);
+          if (trades.length) {
+            for (let i = 0; i < trades.length; i += 1) {
+              await msgCallback(parse(trades[i])); // eslint-disable-line no-await-in-loop
+            }
+          } else {
+            await msgCallback(parse(trades));
+          }
+        });
         break;
       }
       case 'BBO':
@@ -142,10 +155,10 @@ function connect(
           };
 
           const orderBookMsg: OrderBookMsg = {
-            exchange: exchangeInfo.name,
+            exchange: EXCHANGE_NAME,
             marketType: 'Spot',
             pair,
-            rawPair: exchangeInfo.pairs[pair].raw_pair,
+            rawPair: market.id,
             channel,
             channelType,
             timestamp: Date.now(),
@@ -168,11 +181,13 @@ function connect(
 }
 
 export default async function crawl(
-  channelTypes: ChannelType[],
-  pairs: string[] = [],
+  marketType: MarketType,
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  assert.equal(marketType, 'Spot');
+  const [logger, markets] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
 
   const arr: { channelType: ChannelType; pair: string }[] = [];
   pairs.forEach((pair) => {
@@ -183,7 +198,7 @@ export default async function crawl(
 
   const groups = chunkArray<{ channelType: ChannelType; pair: string }>(arr, NUM_CHANNELS_PER_WS);
 
-  const wsClients = groups.map((g) => connect(exchangeInfo, logger, msgCallback, g));
+  const wsClients = groups.map((g) => connect(markets, logger, msgCallback, g));
 
   await Promise.all(wsClients.map((ws) => ws.open()));
 }

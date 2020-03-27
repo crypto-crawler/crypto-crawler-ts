@@ -37,7 +37,7 @@ export default async function crawl(
     case 'Binance':
       return crawlBinance(marketType, channelTypes, pairs, msgCallback);
     case 'Bitfinex':
-      return crawlBitfinex(channelTypes, pairs, msgCallback);
+      return crawlBitfinex(marketType, channelTypes, pairs, msgCallback);
     case 'Bitstamp':
       return crawlBitstamp(channelTypes, pairs, msgCallback);
     case 'Coinbase':
