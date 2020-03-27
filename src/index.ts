@@ -39,7 +39,7 @@ export default async function crawl(
     case 'Bitfinex':
       return crawlBitfinex(marketType, channelTypes, pairs, msgCallback);
     case 'Bitstamp':
-      return crawlBitstamp(channelTypes, pairs, msgCallback);
+      return crawlBitstamp(marketType, channelTypes, pairs, msgCallback);
     case 'Coinbase':
       return crawlCoinbase(channelTypes, pairs, msgCallback);
     case 'Huobi':

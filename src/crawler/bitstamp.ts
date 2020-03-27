@@ -1,20 +1,28 @@
 import { strict as assert } from 'assert';
-import { ExchangeInfo } from 'exchange-info';
+import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, getChannels, initBeforeCrawl } from './util';
+import { connect, getChannelsNew, initBeforeCrawlNew } from './util';
 
 const EXCHANGE_NAME = 'Bitstamp';
+const WEBSOCKET_ENDPOINT = 'wss://ws.bitstamp.net';
 
-function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
-  const pairInfo = exchangeInfo.pairs[pair];
-  const rawPair = pairInfo.raw_pair;
+function getChannel(
+  marketType: MarketType,
+  channeltype: ChannelType,
+  pair: string,
+  markets: readonly Market[],
+): readonly string[] {
+  assert.equal('Spot', marketType);
+  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
+
+  const rawPair = market.id;
   switch (channeltype) {
     case 'OrderBook':
-      return `diff_order_book_${rawPair}`;
+      return [`diff_order_book_${rawPair}`];
     case 'Trade':
-      return `live_trades_${rawPair}`;
+      return [`live_trades_${rawPair}`];
     default:
       throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
@@ -33,17 +41,20 @@ function getChannelType(channel: string): ChannelType {
 }
 
 export default async function crawl(
-  channelTypes: ChannelType[],
-  pairs: string[] = [],
+  marketType: MarketType,
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const [logger, exchangeInfo, pairMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  assert.equal('Spot', marketType, 'Bitstamp has only Spot market');
 
-  const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
-  assert.ok(channels.length > 0);
+  const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
+
+  const channels = getChannelsNew(marketType, channelTypes, pairs, markets, getChannel);
+  assert.equal(channels.length, 1);
 
   connect(
-    exchangeInfo.websocket_endpoint,
+    WEBSOCKET_ENDPOINT,
     async (text) => {
       const raw = text as string;
       const data = JSON.parse(raw) as {
@@ -66,7 +77,7 @@ export default async function crawl(
       }
       const channelType = getChannelType(data.channel);
       const rawPair = data.channel.split('_').slice(-1)[0];
-      const pair = pairMap.get(rawPair)!.normalized_pair;
+      const { pair } = marketMap.get(rawPair)!;
       switch (channelType) {
         case 'OrderBook': {
           assert.equal(data.event, 'data');
@@ -80,7 +91,7 @@ export default async function crawl(
             };
           };
           const orderBookMsg: OrderBookMsg = {
-            exchange: exchangeInfo.name,
+            exchange: EXCHANGE_NAME,
             marketType: 'Spot',
             pair,
             rawPair,
@@ -127,7 +138,7 @@ export default async function crawl(
             channel: string;
           };
           const tradeMsg: TradeMsg = {
-            exchange: exchangeInfo.name,
+            exchange: EXCHANGE_NAME,
             marketType: 'Spot',
             pair,
             rawPair,
