@@ -1,37 +1,41 @@
 import { Client, IFrame, Message } from '@stomp/stompjs';
 import { strict as assert } from 'assert';
-import { ExchangeInfo } from 'exchange-info';
+import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { initBeforeCrawl } from './util';
+import { initBeforeCrawlNew } from './util';
 
 const EXCHANGE_NAME = 'WhaleEx';
+const WEBSOCKET_ENDPOINT = 'wss://www.whaleex.com/ws/websocket';
 
 // see https://github.com/stomp-js/stompjs/issues/28#issuecomment-554984094
 Object.assign(global, { WebSocket: require('ws') }); // eslint-disable-line global-require
 
-function getChannel(channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo): string {
-  const pairInfo = exchangeInfo.pairs[pair];
+function getChannel(channeltype: ChannelType, pair: string, markets: readonly Market[]): string {
+  const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
+  assert.ok(market);
   switch (channeltype) {
     case 'OrderBook':
-      return `/${pairInfo.raw_pair}@depth5`;
+      return `/${market.id}@depth5`;
     case 'Trade':
-      return `/${pairInfo.raw_pair}@trade`;
+      return `/${market.id}@trade`;
     default:
       throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
 }
 
 export default async function crawl(
+  marketType: MarketType,
   channelTypes: ChannelType[],
   pairs: string[] = [],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  assert.equal('Spot', marketType, 'WhaleEx has only Spot market');
+  const [logger, exchangeInfo] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs);
 
   const client = new Client({
-    brokerURL: exchangeInfo.websocket_endpoint,
+    brokerURL: WEBSOCKET_ENDPOINT,
     connectHeaders: {
       login: 'guest',
       passcode: 'guest',
@@ -65,7 +69,7 @@ export default async function crawl(
               assert.equal(rawMsg.type, 'B');
 
               const msg: OrderBookMsg = {
-                exchange: exchangeInfo.name,
+                exchange: EXCHANGE_NAME,
                 marketType: 'Spot',
                 pair,
                 rawPair: rawMsg.symbol,
@@ -110,7 +114,7 @@ export default async function crawl(
               assert.equal(rawMsg.type, 'T');
 
               const msg: TradeMsg = {
-                exchange: exchangeInfo.name,
+                exchange: EXCHANGE_NAME,
                 marketType: 'Spot',
                 pair,
                 rawPair: rawMsg.symbol,

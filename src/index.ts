@@ -53,7 +53,7 @@ export default async function crawl(
     case 'OKEx':
       return crawlOKEx(marketType, channelTypes, pairs, msgCallback);
     case 'WhaleEx':
-      return crawlWhaleEx(channelTypes, pairs, msgCallback);
+      return crawlWhaleEx(marketType, channelTypes, pairs, msgCallback);
     default:
       throw new Error(`Unknown exchange: ${exchange}`);
   }
