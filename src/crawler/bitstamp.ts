@@ -51,7 +51,7 @@ export default async function crawl(
   const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
 
   const channels = getChannelsNew(marketType, channelTypes, pairs, markets, getChannel);
-  assert.equal(channels.length, 1);
+  assert.equal(channels.length, channelTypes.length * pairs.length);
 
   connect(
     WEBSOCKET_ENDPOINT,

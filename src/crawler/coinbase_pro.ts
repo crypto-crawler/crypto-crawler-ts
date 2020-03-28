@@ -31,7 +31,7 @@ export default async function crawl(
   const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
 
   const channels = channelTypes.map((x) => getChannel(x));
-  assert.ok(channels.length > 0);
+  assert.equal(channels.length, channelTypes.length * pairs.length);
 
   const websocket = new WebsocketClient(
     pairs.map((p) => markets.filter((m) => m.type === 'Spot' && m.pair === p)[0].id),
