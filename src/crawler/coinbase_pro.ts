@@ -1,12 +1,13 @@
 import { strict as assert } from 'assert';
 import { WebsocketClient, WebsocketMessage } from 'coinbase-pro';
-import { PairInfo } from 'exchange-info';
+import { MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { initBeforeCrawl } from './util';
+import { initBeforeCrawlNew } from './util';
 
-const EXCHANGE_NAME = 'Coinbase';
+const EXCHANGE_NAME = 'CoinbasePro';
+const WEBSOCKET_ENDPOINT = 'wss://ws-feed.pro.coinbase.com';
 
 function getChannel(channeltype: ChannelType): string {
   switch (channeltype) {
@@ -20,30 +21,27 @@ function getChannel(channeltype: ChannelType): string {
 }
 
 export default async function crawl(
-  channelTypes: ChannelType[],
-  pairs: string[] = [],
+  marketType: MarketType,
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  assert.equal('Spot', marketType, 'CoinbasePro has only Spot market');
 
-  const idToPairInfoMap: { [key: string]: PairInfo } = {};
-  pairs.forEach((p) => {
-    const pairInfo = exchangeInfo.pairs[p];
-    idToPairInfoMap[pairInfo.id as string] = pairInfo;
-  });
+  const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
 
   const channels = channelTypes.map((x) => getChannel(x));
   assert.ok(channels.length > 0);
 
   const websocket = new WebsocketClient(
-    pairs.map((p) => exchangeInfo.pairs[p].raw_pair as string),
-    exchangeInfo.websocket_endpoint,
+    pairs.map((p) => markets.filter((m) => m.type === 'Spot' && m.pair === p)[0].id),
+    WEBSOCKET_ENDPOINT,
     undefined,
     { channels },
   );
 
   websocket.on('open', () => {
-    logger.info(`${exchangeInfo.websocket_endpoint} connected`);
+    logger.info(`${WEBSOCKET_ENDPOINT} connected`);
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   websocket.on('message', (data: { type: string; [key: string]: any }) => {
@@ -70,9 +68,9 @@ export default async function crawl(
       case 'snapshot': {
         const rawFullOrderBook = data as WebsocketMessage.L2Snapshot;
         const orderBookMsg: OrderBookMsg = {
-          exchange: exchangeInfo.name,
+          exchange: EXCHANGE_NAME,
           marketType: 'Spot',
-          pair: idToPairInfoMap[rawFullOrderBook.product_id].normalized_pair,
+          pair: marketMap.get(rawFullOrderBook.product_id)!.pair,
           rawPair: rawFullOrderBook.product_id,
           channel: 'level2',
           channelType: 'OrderBook',
@@ -101,9 +99,9 @@ export default async function crawl(
       case 'l2update': {
         const rawOrderBookUpdate = data as WebsocketMessage.L2Update;
         const orderBookMsg: OrderBookMsg = {
-          exchange: exchangeInfo.name,
+          exchange: EXCHANGE_NAME,
           marketType: 'Spot',
-          pair: idToPairInfoMap[rawOrderBookUpdate.product_id].normalized_pair,
+          pair: marketMap.get(rawOrderBookUpdate.product_id)!.pair,
           rawPair: rawOrderBookUpdate.product_id,
           channel: 'level2',
           channelType: 'OrderBook',
@@ -138,9 +136,9 @@ export default async function crawl(
       case 'match': {
         const rawTradeMsg = data as WebsocketMessage.Match;
         const tradeMsg: TradeMsg = {
-          exchange: exchangeInfo.name,
+          exchange: EXCHANGE_NAME,
           marketType: 'Spot',
-          pair: idToPairInfoMap[rawTradeMsg.product_id].normalized_pair,
+          pair: marketMap.get(rawTradeMsg.product_id)!.pair,
           rawPair: rawTradeMsg.product_id,
           channel: 'matches',
           channelType: 'Trade',
@@ -163,7 +161,7 @@ export default async function crawl(
     process.exit(1); // fail fast, pm2 will restart it
   });
   websocket.on('close', () => {
-    logger.info(`${exchangeInfo.websocket_endpoint} disconnected`);
+    logger.info(`${WEBSOCKET_ENDPOINT} disconnected`);
     process.exit(); // pm2 will restart it
   });
 }

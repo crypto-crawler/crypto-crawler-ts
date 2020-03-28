@@ -3,7 +3,7 @@ import { defaultMsgCallback, MsgCallback } from './crawler';
 import crawlBinance from './crawler/binance';
 import crawlBitfinex from './crawler/bitfinex';
 import crawlBitstamp from './crawler/bitstamp';
-import crawlCoinbase from './crawler/coinbase';
+import crawlCoinbasePro from './crawler/coinbase_pro';
 import crawlHuobi from './crawler/huobi';
 import crawlKraken from './crawler/kraken';
 import crawlMXC from './crawler/mxc';
@@ -40,8 +40,8 @@ export default async function crawl(
       return crawlBitfinex(marketType, channelTypes, pairs, msgCallback);
     case 'Bitstamp':
       return crawlBitstamp(marketType, channelTypes, pairs, msgCallback);
-    case 'Coinbase':
-      return crawlCoinbase(channelTypes, pairs, msgCallback);
+    case 'CoinbasePro':
+      return crawlCoinbasePro(marketType, channelTypes, pairs, msgCallback);
     case 'Huobi':
       return crawlHuobi(marketType, channelTypes, pairs, msgCallback);
     case 'Kraken':

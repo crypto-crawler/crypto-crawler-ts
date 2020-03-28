@@ -4,7 +4,7 @@ export const EXCHANGES = [
   'Binance',
   'Bitfinex',
   'Bitstamp',
-  'Coinbase',
+  'CoinbasePro',
   'Huobi',
   'Kraken',
   'MXC',
