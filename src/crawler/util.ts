@@ -3,7 +3,6 @@ import fetchMarkets, {
   MarketType,
   SupportedExchange as MarketSupportedExchange,
 } from 'crypto-markets';
-import { PairInfo } from 'exchange-info';
 import Pako from 'pako';
 import { Logger } from 'winston';
 import WebSocket from 'ws';
@@ -97,15 +96,6 @@ export function connect(
       connect(url, onMessage, subscriptions, logger);
     }, 1000);
   });
-}
-
-export function buildPairMap(pairs: { [key: string]: PairInfo }): Map<string, PairInfo> {
-  const result = new Map<string, PairInfo>();
-  Object.keys(pairs).forEach((p) => {
-    const pairInfo = pairs[p];
-    result.set(pairInfo.raw_pair, pairInfo);
-  });
-  return result;
 }
 
 export function buildMarketMap(markets: readonly Market[]): Map<string, Market> {
