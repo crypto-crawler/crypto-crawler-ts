@@ -1,10 +1,11 @@
 import { strict as assert } from 'assert';
+import { MarketType } from 'crypto-markets';
 import io from 'socket.io-client';
 import { Logger } from 'winston';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import createLogger from '../util/logger';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'MXC';
 
@@ -30,7 +31,7 @@ function getChannel(channeltype: ChannelType): string {
 // MXC allows only one pair per connection.
 function crawlOnePair(
   pair: string,
-  channelTypes: ChannelType[],
+  channelTypes: readonly ChannelType[],
   msgCallback: MsgCallback,
   logger: Logger,
 ): void {
@@ -102,16 +103,13 @@ function crawlOnePair(
 }
 
 export default async function crawl(
-  channelTypes: ChannelType[],
-  pairs: string[] = [],
+  marketType: MarketType,
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const [logger, exchangeInfo, pairMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
-  assert.ok(msgCallback);
-  assert.ok(pairMap);
-
-  const channels = getChannels(channelTypes, pairs, exchangeInfo, getChannel);
-  assert.ok(channels.length > 0);
+  assert.equal('Spot', marketType, 'MXC has only Spot market');
+  const logger = createLogger(EXCHANGE_NAME);
 
   pairs.forEach((pair) => crawlOnePair(pair, channelTypes, msgCallback, logger));
 }

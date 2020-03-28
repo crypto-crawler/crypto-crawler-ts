@@ -47,7 +47,7 @@ export default async function crawl(
     case 'Kraken':
       return crawlKraken(marketType, channelTypes, pairs, msgCallback);
     case 'MXC':
-      return crawlMXC(channelTypes, pairs, msgCallback);
+      return crawlMXC(marketType, channelTypes, pairs, msgCallback);
     case 'Newdex':
       return crawlNewdex(channelTypes, pairs, msgCallback);
     case 'OKEx':
