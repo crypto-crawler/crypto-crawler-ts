@@ -4,7 +4,7 @@ import WebSocket from 'ws';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { getChannelsNew, initBeforeCrawlNew } from './util';
+import { getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Newdex';
 const WEBSOCKET_ENDPOINT = 'wss://ws.newdex.io';
@@ -33,7 +33,7 @@ export default async function crawl(
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   assert.equal('Spot', marketType, 'Newdex has only Spot market');
-  const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
+  const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const connect = (url: string): void => {
     const websocket = new WebSocket(url);
@@ -51,16 +51,14 @@ export default async function crawl(
         case 'handshake': {
           logger.info('Handshake succeeded!');
 
-          getChannelsNew(marketType, channelTypes, pairs, markets, getChannel).forEach(
-            (channel) => {
-              websocket.send(
-                JSON.stringify({
-                  channel,
-                  type: 'subscribe',
-                }),
-              );
-            },
-          );
+          getChannels(marketType, channelTypes, pairs, markets, getChannel).forEach((channel) => {
+            websocket.send(
+              JSON.stringify({
+                channel,
+                type: 'subscribe',
+              }),
+            );
+          });
 
           const handshakeData = rawMsg as {
             type: string;

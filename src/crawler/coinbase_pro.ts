@@ -4,7 +4,7 @@ import { MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { initBeforeCrawlNew } from './util';
+import { initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'CoinbasePro';
 const WEBSOCKET_ENDPOINT = 'wss://ws-feed.pro.coinbase.com';
@@ -28,7 +28,7 @@ export default async function crawl(
 ): Promise<void> {
   assert.equal('Spot', marketType, 'CoinbasePro has only Spot market');
 
-  const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
+  const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const channels = channelTypes.map((x) => getChannel(x));
   assert.equal(channels.length, channelTypes.length * pairs.length);

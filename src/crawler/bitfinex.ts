@@ -4,7 +4,7 @@ import { Logger } from 'winston';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { initBeforeCrawlNew } from './util';
+import { initBeforeCrawl } from './util';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { WSv2 } = require('bitfinex-api-node');
@@ -187,7 +187,7 @@ export default async function crawl(
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   assert.equal(marketType, 'Spot');
-  const [logger, markets] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
+  const [logger, markets] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const arr: { channelType: ChannelType; pair: string }[] = [];
   pairs.forEach((pair) => {

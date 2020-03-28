@@ -4,7 +4,7 @@ import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
 import { BboMsg, OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, getChannelsNew, initBeforeCrawlNew } from './util';
+import { connect, getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'OKEx';
 
@@ -77,9 +77,9 @@ export default async function crawl(
   pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
+  const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
-  const channels = getChannelsNew(marketType, channelTypes, pairs, markets, getChannel);
+  const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
   if (marketType === 'Spot') {
     assert.equal(channels.length, channelTypes.length * pairs.length);

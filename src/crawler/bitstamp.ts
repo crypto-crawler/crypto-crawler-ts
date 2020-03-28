@@ -3,7 +3,7 @@ import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, getChannelsNew, initBeforeCrawlNew } from './util';
+import { connect, getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Bitstamp';
 const WEBSOCKET_ENDPOINT = 'wss://ws.bitstamp.net';
@@ -48,9 +48,9 @@ export default async function crawl(
 ): Promise<void> {
   assert.equal('Spot', marketType, 'Bitstamp has only Spot market');
 
-  const [logger, markets, marketMap] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs, marketType);
+  const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
-  const channels = getChannelsNew(marketType, channelTypes, pairs, markets, getChannel);
+  const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
   assert.equal(channels.length, channelTypes.length * pairs.length);
 
   connect(

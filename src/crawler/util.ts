@@ -3,7 +3,7 @@ import fetchMarkets, {
   MarketType,
   SupportedExchange as MarketSupportedExchange,
 } from 'crypto-markets';
-import getExchangeInfo, { ExchangeInfo, PairInfo, SupportedExchange } from 'exchange-info';
+import { PairInfo } from 'exchange-info';
 import Pako from 'pako';
 import { Logger } from 'winston';
 import WebSocket from 'ws';
@@ -11,22 +11,6 @@ import { ChannelType } from '../pojo/channel_type';
 import createLogger from '../util/logger';
 
 export function getChannels(
-  channelTypes: ChannelType[],
-  pairs: string[],
-  exchangeInfo: ExchangeInfo,
-  getChannel: (channeltype: ChannelType, pair: string, exchangeInfo: ExchangeInfo) => string,
-): string[] {
-  const channels: string[] = [];
-  channelTypes.forEach((channelType) => {
-    pairs.forEach((pair) => {
-      const channel = getChannel(channelType, pair, exchangeInfo);
-      channels.push(channel);
-    });
-  });
-  return channels;
-}
-
-export function getChannelsNew(
   marketType: MarketType,
   channelTypes: readonly ChannelType[],
   pairs: readonly string[],
@@ -133,39 +117,6 @@ export function buildMarketMap(markets: readonly Market[]): Map<string, Market> 
 }
 
 export async function initBeforeCrawl(
-  exchange: SupportedExchange,
-  pairs: string[] = [],
-): Promise<[Logger, ExchangeInfo, Map<string, PairInfo>]> {
-  const logger = createLogger(exchange);
-
-  let error: Error | undefined;
-  let exchangeInfo: ExchangeInfo | undefined;
-  // retry 3 times
-  for (let i = 0; i < 3; i += 1) {
-    try {
-      exchangeInfo = await getExchangeInfo(exchange); // eslint-disable-line no-await-in-loop
-      break;
-    } catch (e) {
-      error = e;
-    }
-  }
-  if (error) {
-    throw error;
-  }
-
-  // raw_pair -> pairInfo
-  const pairMap = buildPairMap(exchangeInfo!.pairs);
-  // empty means all pairs
-  if (pairs.length === 0) {
-    // clear pairs and copy all keys of exchangeInfo.pairs into it
-    pairs.splice(0, pairs.length, ...Object.keys(exchangeInfo!.pairs));
-  }
-  logger.info(pairs);
-
-  return [logger, exchangeInfo!, pairMap];
-}
-
-export async function initBeforeCrawlNew(
   exchange: MarketSupportedExchange,
   pairs: readonly string[],
   marketType: MarketType = 'Spot',

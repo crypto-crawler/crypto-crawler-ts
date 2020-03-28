@@ -4,7 +4,7 @@ import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { initBeforeCrawlNew } from './util';
+import { initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'WhaleEx';
 const WEBSOCKET_ENDPOINT = 'wss://www.whaleex.com/ws/websocket';
@@ -32,7 +32,7 @@ export default async function crawl(
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   assert.equal('Spot', marketType, 'WhaleEx has only Spot market');
-  const [logger, exchangeInfo] = await initBeforeCrawlNew(EXCHANGE_NAME, pairs);
+  const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
 
   const client = new Client({
     brokerURL: WEBSOCKET_ENDPOINT,
