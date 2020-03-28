@@ -45,7 +45,7 @@ export default async function crawl(
     case 'Huobi':
       return crawlHuobi(marketType, channelTypes, pairs, msgCallback);
     case 'Kraken':
-      return crawlKraken(channelTypes, pairs, msgCallback);
+      return crawlKraken(marketType, channelTypes, pairs, msgCallback);
     case 'MXC':
       return crawlMXC(channelTypes, pairs, msgCallback);
     case 'Newdex':
