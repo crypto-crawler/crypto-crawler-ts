@@ -79,8 +79,8 @@ function getChannelType(channel: string): ChannelType {
 
 export default async function crawl(
   marketType: MarketType,
-  channelTypes: ChannelType[],
-  pairs: string[] = [],
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);

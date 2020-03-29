@@ -27,8 +27,8 @@ function getChannel(channeltype: ChannelType, pair: string, markets: readonly Ma
 
 export default async function crawl(
   marketType: MarketType,
-  channelTypes: ChannelType[],
-  pairs: string[] = [],
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   assert.equal('Spot', marketType, 'WhaleEx has only Spot market');

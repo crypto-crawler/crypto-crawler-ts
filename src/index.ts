@@ -25,8 +25,8 @@ import { ChannelType } from './pojo/channel_type';
 export default async function crawl(
   exchange: string,
   marketType: MarketType,
-  channelTypes: ChannelType[],
-  pairs: string[],
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   if (pairs.length > 0) {
