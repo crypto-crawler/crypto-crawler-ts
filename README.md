@@ -13,14 +13,14 @@ function processMsgCallback(msg) {
 }
 
 (async () => {
-  await crawl('Coinbase', ['OrderBook'], ['BTC_USD'], processMsgCallback);
+  await crawl('CoinbasePro', 'Spot', ['OrderBook'], ['BTC_USD'], processMsgCallback);
 })();
 ```
 
 ## Quickstart
 
 ```bash
-npx crypto-crawler --exchange Newdex
+npx crypto-crawler --exchange CoinbasePro --marketType Spot --channelType OrderBook --pairs BTC_USD
 ```
 
 ## Help
