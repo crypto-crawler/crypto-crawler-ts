@@ -77,7 +77,8 @@ export default async function crawl(
       }
       const channelType = getChannelType(data.channel);
       const rawPair = data.channel.split('_').slice(-1)[0];
-      const { pair } = marketMap.get(rawPair)!;
+      const market = marketMap.get(rawPair)!;
+      assert.equal(market.exchange, EXCHANGE_NAME);
       switch (channelType) {
         case 'OrderBook': {
           assert.equal(data.event, 'data');
@@ -93,7 +94,7 @@ export default async function crawl(
           const orderBookMsg: OrderBookMsg = {
             exchange: EXCHANGE_NAME,
             marketType: 'Spot',
-            pair,
+            pair: market.pair,
             rawPair,
             channel: rawOrderBookMsg.channel,
             channelType,
@@ -140,7 +141,7 @@ export default async function crawl(
           const tradeMsg: TradeMsg = {
             exchange: EXCHANGE_NAME,
             marketType: 'Spot',
-            pair,
+            pair: market.pair,
             rawPair,
             channel: rawTradeMsg.channel,
             channelType,

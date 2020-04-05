@@ -84,6 +84,7 @@ function connect(
     const { channelType, pair } = x;
     const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
     assert.ok(market);
+    assert.equal(market.exchange, EXCHANGE_NAME);
     assert.equal(pair, market.pair);
     const symbol = `t${market.id.toUpperCase()}`;
     const channel = getChannel(channelType);

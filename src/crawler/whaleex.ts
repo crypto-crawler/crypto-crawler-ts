@@ -15,6 +15,7 @@ Object.assign(global, { WebSocket: require('ws') }); // eslint-disable-line glob
 function getChannel(channeltype: ChannelType, pair: string, markets: readonly Market[]): string {
   const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
   assert.ok(market);
+  assert.equal(market.exchange, EXCHANGE_NAME);
   switch (channeltype) {
     case 'OrderBook':
       return `/${market.id}@depth5`;

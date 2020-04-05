@@ -81,6 +81,7 @@ export default async function crawl(
               rawOrderBookMsg.channel.length - 2,
             );
             const market = marketMap.get(rawPair)!;
+            assert.equal(market.exchange, EXCHANGE_NAME);
 
             const msg: OrderBookMsg = {
               exchange: EXCHANGE_NAME,

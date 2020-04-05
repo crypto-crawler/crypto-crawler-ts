@@ -90,6 +90,7 @@ export default async function crawl(
         const channel = arr[2] as string;
         const wsname = arr[3] as string;
         const market = marketMap.get(wsname)!;
+        assert.equal(market.exchange, EXCHANGE_NAME);
         const channelType = getChannelType(channel);
         switch (channelType) {
           case 'BBO': {

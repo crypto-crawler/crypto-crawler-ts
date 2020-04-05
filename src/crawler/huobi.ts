@@ -39,6 +39,7 @@ function getChannel(
   }
 
   const result: string[] = marketsFiltered.map((market) => {
+    assert.equal(market.exchange, EXCHANGE_NAME);
     const rawPair =
       market.type === 'Spot'
         ? market.id.toLowerCase()
