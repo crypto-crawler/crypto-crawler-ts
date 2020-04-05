@@ -1,8 +1,4 @@
-import fetchMarkets, {
-  Market,
-  MarketType,
-  SupportedExchange as MarketSupportedExchange,
-} from 'crypto-markets';
+import fetchMarkets, { Market, MarketType } from 'crypto-markets';
 import Pako from 'pako';
 import { Logger } from 'winston';
 import WebSocket from 'ws';
@@ -107,7 +103,7 @@ export function buildMarketMap(markets: readonly Market[]): Map<string, Market> 
 }
 
 export async function initBeforeCrawl(
-  exchange: MarketSupportedExchange,
+  exchange: string,
   pairs: readonly string[],
   marketType: MarketType = 'Spot',
 ): Promise<[Logger, readonly Market[], Map<string, Market>]> {

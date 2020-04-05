@@ -54,4 +54,5 @@ async function crawl(
 
 ## Related Projects
 
-- [crypto-order](https://www.npmjs.com/package/crypto-order), a library to place and cancel orders at crypto exchanges.
+- [crypto-client](https://www.npmjs.com/package/crypto-client), An unified client for all cryptocurrency exchanges.
+- [coin-bbo](https://www.npmjs.com/package/coin-bbo), a crawler to get realtime BBO messages from crypto exchanges.
