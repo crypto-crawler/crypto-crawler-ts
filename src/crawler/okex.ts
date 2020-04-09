@@ -35,7 +35,7 @@ function getChannel(
       case 'BBO':
         return `${marketType.toLowerCase()}/depth5:${rawPair}`;
       case 'OrderBook':
-        return `${marketType.toLowerCase()}/optimized_depth:${rawPair}`;
+        return `${marketType.toLowerCase()}/optimized_depth:${rawPair}`; // optimized_depth, depth, depth_l2_tbt
       case 'Ticker':
         return `${marketType.toLowerCase()}/ticker:${rawPair}`;
       case 'Trade':
@@ -55,6 +55,7 @@ function getChannelType(channel: string): ChannelType {
   switch (channelName) {
     case 'depth5':
       return 'BBO';
+    case 'depth_l2_tbt':
     case 'depth':
     case 'optimized_depth':
       result = 'OrderBook';
@@ -227,7 +228,7 @@ export default async function crawl(
               channel: rawTickerMsg.table,
               channelType,
               timestamp: new Date(x.timestamp).getTime(),
-              raw: rawMsg,
+              raw: x,
               last_price: parseFloat(x.last),
               last_quantity: parseFloat(x.last_qty),
               best_bid_price: parseFloat(x.best_bid),
@@ -265,7 +266,7 @@ export default async function crawl(
             channel: rawMsg.table,
             channelType,
             timestamp: new Date(x.timestamp).getTime(),
-            raw: rawMsg,
+            raw: x,
             price: parseFloat(x.price),
             quantity: parseFloat(x.size),
             side: x.side === 'sell',
@@ -276,7 +277,7 @@ export default async function crawl(
           break;
         }
         default:
-          logger.error(`Unknown channel: ${obj.ch}`);
+          logger.error(`Unknown channel: ${obj.table}`);
       }
     },
     [{ op: 'subscribe', args: channels }],
