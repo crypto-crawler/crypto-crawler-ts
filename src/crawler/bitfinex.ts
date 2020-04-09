@@ -142,6 +142,7 @@ function connect(
         let lastAskPrice = 0;
         let lastAskQuantity = 0;
 
+        let first = true;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ws.onOrderBook({ symbol, prec: 'P0' }, (orderbook: any) => {
           assert.ok(orderbook instanceof OrderBook);
@@ -171,8 +172,9 @@ function connect(
             raw: orderbook.serialize(),
             asks: orderbook.asks.map(parse),
             bids: orderbook.bids.map(parse),
-            full: orderbook.asks.length === 25 && orderbook.bids.length === 25,
+            full: first,
           };
+          first = false;
 
           if (channelType === 'OrderBook') {
             msgCallback(orderBookMsg);
