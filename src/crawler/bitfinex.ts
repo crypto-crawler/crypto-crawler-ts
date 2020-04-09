@@ -2,13 +2,13 @@ import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import { Logger } from 'winston';
 import { ChannelType } from '../pojo/channel_type';
-import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { BboMsg, OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { initBeforeCrawl } from './util';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { WSv2 } = require('bitfinex-api-node');
-const { OrderBook, PublicTrade } = require('bfx-api-node-models');
+const { OrderBook, PublicTrade, TradingTicker } = require('bfx-api-node-models');
 
 const EXCHANGE_NAME = 'Bitfinex';
 const NUM_CHANNELS_PER_WS = 30; // This is for error 10305, see https://www.bitfinex.com/posts/381
@@ -73,6 +73,9 @@ function connect(
           break;
         case 'OrderBook':
           ws.subscribeOrderBook(symbol, 'P0', '25');
+          break;
+        case 'Ticker':
+          ws.subscribeTicker(symbol);
           break;
         default:
           throw Error(`Unknown channelType: ${channelType}`);
@@ -210,6 +213,36 @@ function connect(
               msgCallback(bboMsg);
             }
           }
+        });
+        break;
+      }
+      case 'Ticker': {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ws.onTicker({ symbol }, async (ticker: any) => {
+          assert.ok(ticker instanceof TradingTicker);
+
+          const tickerMsg: TickerMsg = {
+            exchange: EXCHANGE_NAME,
+            marketType: 'Spot',
+            pair,
+            rawPair: market.id,
+            channel,
+            channelType,
+            timestamp: Date.now(),
+            raw: ticker.serialize(),
+            last_price: ticker.lastPrice,
+            last_quantity: 0,
+            best_bid_price: ticker.bid,
+            best_bid_quantity: ticker.bidSize,
+            best_ask_price: ticker.ask,
+            best_ask_quantity: ticker.askSize,
+            open_price_24h: 0,
+            high_price_24h: ticker.high,
+            low_price_24h: ticker.low,
+            base_volume_24h: ticker.volume,
+            quote_volume_24h: 0,
+          };
+          await msgCallback(tickerMsg);
         });
         break;
       }
