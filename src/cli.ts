@@ -20,10 +20,10 @@ const { argv } = yargs.options({
     type: 'string',
     default: 'Spot',
   },
-  channelType: {
+  channelTypes: {
     choices: CHANNEL_TYPES,
-    type: 'string',
-    default: 'OrderBook',
+    type: 'array',
+    default: ['OrderBook'],
   },
   pairs: {
     type: 'array',
@@ -33,8 +33,8 @@ const { argv } = yargs.options({
 
 console.info(chalk.green(figlet.textSync('Crypto Crawler')));
 
-const { exchange, marketType, channelType, pairs } = argv;
+const { exchange, marketType, channelTypes, pairs } = argv;
 
 (async (): Promise<void> => {
-  await crawl(exchange, marketType as MarketType, [channelType as ChannelType], pairs);
+  await crawl(exchange, marketType as MarketType, channelTypes as ChannelType[], pairs);
 })();
