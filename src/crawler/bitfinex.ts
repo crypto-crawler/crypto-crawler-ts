@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import { Logger } from 'winston';
 import { ChannelType } from '../pojo/channel_type';
-import { BboMsg, OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
+import { OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { initBeforeCrawl } from './util';
 
@@ -140,11 +140,6 @@ function connect(
       }
       case 'BBO':
       case 'OrderBook': {
-        let lastBidPrice = 0;
-        let lastBidQuantity = 0;
-        let lastAskPrice = 0;
-        let lastAskQuantity = 0;
-
         let first = true;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ws.onOrderBook({ symbol, prec: 'P0' }, (orderbook: any) => {
@@ -170,7 +165,7 @@ function connect(
             pair,
             rawPair: market.id,
             channel,
-            channelType,
+            channelType: 'OrderBook',
             timestamp: Date.now(),
             raw: orderbook.serialize(),
             asks: orderbook.asks.map(parse),
@@ -179,40 +174,7 @@ function connect(
           };
           first = false;
 
-          if (channelType === 'OrderBook') {
-            msgCallback(orderBookMsg);
-          } else {
-            const bboMsg: BboMsg = {
-              exchange: EXCHANGE_NAME,
-              marketType: 'Spot',
-              pair,
-              rawPair: market.id,
-              channel,
-              channelType,
-              timestamp: Date.now(),
-              raw: orderbook.serialize(),
-              bidPrice: lastBidPrice,
-              bidQuantity: lastBidQuantity,
-              askPrice: lastAskPrice,
-              askQuantity: lastAskQuantity,
-            };
-
-            if (orderBookMsg.bids.length > 0 || orderBookMsg.asks.length > 0) {
-              if (orderBookMsg.bids.length > 0) {
-                bboMsg.bidPrice = orderBookMsg.bids[0].price;
-                bboMsg.bidQuantity = orderBookMsg.bids[0].quantity;
-                lastBidPrice = orderBookMsg.bids[0].price;
-                lastBidQuantity = orderBookMsg.bids[0].quantity;
-              }
-              if (orderBookMsg.asks.length > 0) {
-                bboMsg.askPrice = orderBookMsg.asks[0].price;
-                bboMsg.askQuantity = orderBookMsg.asks[0].quantity;
-                lastAskPrice = orderBookMsg.asks[0].price;
-                lastAskQuantity = orderBookMsg.asks[0].quantity;
-              }
-              msgCallback(bboMsg);
-            }
-          }
+          msgCallback(orderBookMsg);
         });
         break;
       }

@@ -1,6 +1,6 @@
 {
   "name": "crypto-crawler",
-  "version": "2.5.6",
+  "version": "2.5.7",
   "description": "Crawl orderbook and trade messages from crypto exchanges.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -59,7 +59,7 @@
     "eslint-plugin-jest": "^23.8.2",
     "eslint-plugin-markdown": "^1.0.2",
     "eslint-plugin-prettier": "^3.1.2",
-    "husky": "^4.2.3",
+    "husky": "^4.2.4",
     "prettier": "^2.0.4",
     "typescript": "^3.8.3"
   },
