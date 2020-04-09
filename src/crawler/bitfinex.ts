@@ -61,9 +61,9 @@ function connect(
   ws.on('open', () => {
     arr.forEach((x) => {
       const { channelType, pair } = x;
-      const symbol = markets
-        .filter((m) => m.type === 'Spot' && m.pair === pair)[0]
-        .id.toUpperCase();
+      const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
+      assert.ok(market, `Can NOT find Bitfinex ${pair} Spot market`);
+      const symbol = `t${market.id.toUpperCase()}`;
       switch (channelType) {
         case 'Trade':
           ws.subscribeTrades(symbol);
