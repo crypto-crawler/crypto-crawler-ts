@@ -71,7 +71,7 @@ export default async function crawl(
 
               const msg: OrderBookMsg = {
                 exchange: EXCHANGE_NAME,
-                marketType: 'Spot',
+                marketType,
                 pair,
                 rawPair: rawMsg.symbol,
                 channel,
@@ -93,12 +93,9 @@ export default async function crawl(
                 orderItem.cost = orderItem.price * orderItem.quantity;
                 return orderItem;
               };
-              rawMsg.asks.forEach((text: string) => {
-                msg.asks.push(parseOrder(text));
-              });
-              rawMsg.bids.forEach((text: string) => {
-                msg.bids.push(parseOrder(text));
-              });
+              msg.asks = rawMsg.asks.map((text) => parseOrder(text));
+              msg.bids = rawMsg.bids.map((text) => parseOrder(text));
+
               await msgCallback(msg);
               break;
             }
@@ -116,7 +113,7 @@ export default async function crawl(
 
               const msg: TradeMsg = {
                 exchange: EXCHANGE_NAME,
-                marketType: 'Spot',
+                marketType,
                 pair,
                 rawPair: rawMsg.symbol,
                 channel,

@@ -2,9 +2,9 @@ import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
-import { BboMsg, OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
+import { OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, getChannels, initBeforeCrawl } from './util';
+import { connect, convertFullOrderBookMsgToBboMsg, getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'OKEx';
 
@@ -128,7 +128,7 @@ export default async function crawl(
             pair: marketMap.get(rawOrderBookMsg.data[0].instrument_id)!.pair,
             rawPair: rawOrderBookMsg.data[0].instrument_id,
             channel: rawOrderBookMsg.table,
-            channelType,
+            channelType: 'OrderBook',
             timestamp: new Date(rawOrderBookMsg.data[0].timestamp).getTime(),
             raw: rawMsg,
             asks: [],
@@ -143,20 +143,7 @@ export default async function crawl(
           orderBookMsg.asks = rawOrderBookMsg.data[0].asks.map((x) => parse(x));
           orderBookMsg.bids = rawOrderBookMsg.data[0].bids.map((x) => parse(x));
 
-          const bboMsg: BboMsg = {
-            exchange: EXCHANGE_NAME,
-            marketType,
-            pair: orderBookMsg.pair,
-            rawPair: orderBookMsg.rawPair,
-            channel: orderBookMsg.channel,
-            channelType,
-            timestamp: orderBookMsg.timestamp,
-            raw: rawMsg,
-            bidPrice: orderBookMsg.bids[0].price,
-            bidQuantity: orderBookMsg.bids[0].quantity,
-            askPrice: orderBookMsg.asks[0].price,
-            askQuantity: orderBookMsg.asks[0].quantity,
-          };
+          const bboMsg = convertFullOrderBookMsgToBboMsg(orderBookMsg);
           msgCallback(bboMsg);
           break;
         }

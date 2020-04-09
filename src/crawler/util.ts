@@ -1,8 +1,10 @@
+import { strict as assert } from 'assert';
 import fetchMarkets, { Market, MarketType } from 'crypto-markets';
 import Pako from 'pako';
 import { Logger } from 'winston';
 import WebSocket from 'ws';
 import { ChannelType } from '../pojo/channel_type';
+import { BboMsg, OrderBookMsg } from '../pojo/msg';
 import createLogger from '../util/logger';
 
 export function getChannels(
@@ -134,4 +136,25 @@ export async function initBeforeCrawl(
   logger.info(pairs);
 
   return [logger, markets, marketMap];
+}
+
+export function convertFullOrderBookMsgToBboMsg(orderBookMsg: OrderBookMsg): BboMsg {
+  assert.equal(orderBookMsg.channelType, 'OrderBook');
+  assert.ok(orderBookMsg.full);
+
+  const bboMsg: BboMsg = {
+    exchange: orderBookMsg.exchange,
+    marketType: orderBookMsg.marketType,
+    pair: orderBookMsg.pair,
+    rawPair: orderBookMsg.rawPair,
+    channel: orderBookMsg.channel,
+    channelType: 'BBO',
+    timestamp: orderBookMsg.timestamp,
+    raw: orderBookMsg.raw,
+    bidPrice: orderBookMsg.bids[0].price,
+    bidQuantity: orderBookMsg.bids[0].quantity,
+    askPrice: orderBookMsg.asks[0].price,
+    askQuantity: orderBookMsg.asks[0].quantity,
+  };
+  return bboMsg;
 }
