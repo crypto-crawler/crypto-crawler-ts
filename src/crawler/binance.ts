@@ -29,7 +29,7 @@ function getChannel(
     case 'OrderBook':
       return [`${rawPair}@depth`];
     case 'Trade':
-      return [`${rawPair}@trade`];
+      return [`${rawPair}@aggTrade`]; // trade or aggTrade
     default:
       throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
@@ -47,6 +47,9 @@ function getChannelType(channel: string): ChannelType {
       result = 'OrderBook';
       break;
     case 'trade':
+      result = 'Trade';
+      break;
+    case 'aggTrade':
       result = 'Trade';
       break;
     default:
@@ -80,8 +83,9 @@ export default async function crawl(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rawMsg: { stream: string; data: { [key: string]: any } } = JSON.parse(raw);
       const channelType = getChannelType(rawMsg.stream);
-      switch (channelType) {
-        case 'BBO': {
+
+      switch (rawMsg.stream.split('@')[1]) {
+        case 'bookTicker': {
           const rawBookTickerMsg = rawMsg.data as {
             u: number; // order book updateId
             s: string; // symbol
@@ -107,7 +111,7 @@ export default async function crawl(
           await msgCallback(msg);
           break;
         }
-        case 'OrderBook': {
+        case 'depth': {
           const rawOrderbookMsg = rawMsg.data as {
             e: string;
             E: number;
@@ -146,7 +150,7 @@ export default async function crawl(
           await msgCallback(msg);
           break;
         }
-        case 'Trade': {
+        case 'trade': {
           const rawTradeMsg = rawMsg.data as {
             e: string;
             E: number;
@@ -174,6 +178,38 @@ export default async function crawl(
             quantity: parseFloat(rawTradeMsg.q),
             side: rawTradeMsg.m === false,
             trade_id: rawTradeMsg.t.toString(),
+          };
+          await msgCallback(msg);
+          break;
+        }
+        case 'aggTrade': {
+          const rawTradeMsg = rawMsg.data as {
+            e: string; // Event type
+            E: number; // Event time
+            s: string; // Symbol
+            a: number; // Aggregate trade ID
+            p: string; // Price
+            q: string; // Quantity
+            f: number; // First trade ID
+            l: number; // Last trade ID
+            T: number; // Trade time
+            m: boolean; // Is the buyer the market maker?
+            M: boolean; // Ignore
+          };
+          assert.equal(rawTradeMsg.e, 'aggTrade');
+          const msg: TradeMsg = {
+            exchange: EXCHANGE_NAME,
+            marketType,
+            pair: marketMap.get(rawTradeMsg.s)!.pair,
+            rawPair: rawTradeMsg.s,
+            channel: rawMsg.stream,
+            channelType,
+            timestamp: rawTradeMsg.T,
+            raw: rawMsg,
+            price: parseFloat(rawTradeMsg.p),
+            quantity: parseFloat(rawTradeMsg.q),
+            side: rawTradeMsg.m === false,
+            trade_id: rawTradeMsg.a.toString(),
           };
           await msgCallback(msg);
           break;
