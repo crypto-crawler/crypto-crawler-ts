@@ -241,6 +241,7 @@ export default async function crawl(
               price: string;
               side: 'buy' | 'sell';
               size: string;
+              qty: string;
               timestamp: string;
               trade_id: string;
             }>;
@@ -255,7 +256,7 @@ export default async function crawl(
             timestamp: new Date(x.timestamp).getTime(),
             raw: x,
             price: parseFloat(x.price),
-            quantity: parseFloat(x.size),
+            quantity: parseFloat(marketType === 'Futures' ? x.qty : x.size),
             side: x.side === 'sell',
             trade_id: x.trade_id,
           }));
