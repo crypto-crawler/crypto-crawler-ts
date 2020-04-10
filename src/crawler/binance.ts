@@ -19,7 +19,7 @@ function getChannel(
   markets: readonly Market[],
 ): readonly string[] {
   const market = markets.filter((x) => x.pair === pair && x.type === marketType)[0];
-  assert.ok(market, `${EXCHANGE_NAME} Spot market does NOT have ${pair}`);
+  assert.ok(market, `${EXCHANGE_NAME} ${marketType} market does NOT have ${pair}`);
   assert.equal(market.exchange, EXCHANGE_NAME);
 
   const rawPair = market.id.toLowerCase();
@@ -70,9 +70,7 @@ export default async function crawl(
 
   const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
-  if (marketType === 'Spot') {
-    assert.equal(channels.length, channelTypes.length * pairs.length);
-  }
+  assert.equal(channels.length, channelTypes.length * pairs.length);
 
   const websocketUrl = `${WEBSOCKET_ENDPOINTS[marketType]}/stream?streams=${channels.join('/')}`;
 
