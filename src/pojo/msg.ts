@@ -1,4 +1,3 @@
-import { BaseOrder } from 'coinbase-pro';
 import { MarketType } from 'crypto-markets';
 import { ChannelType } from './channel_type';
 
@@ -57,8 +56,3 @@ export interface BboMsg extends Msg {
   askPrice: number;
   askQuantity: number;
 }
-
-// Specific data types for different exchanges
-export type NewdexOrderMsg = Msg;
-
-export interface GdaxMsg extends Msg, BaseOrder {}
