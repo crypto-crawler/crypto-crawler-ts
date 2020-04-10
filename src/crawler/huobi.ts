@@ -11,6 +11,7 @@ const EXCHANGE_NAME = 'Huobi';
 const WEBSOCKET_ENDPOINTS: { [key: string]: string } = {
   Spot: 'wss://api.huobi.pro/ws',
   Futures: 'wss://www.hbdm.com/ws',
+  Swap: 'wss://api.hbdm.com/swap-ws',
 };
 
 const contractTypes: { [key: string]: string } = {
@@ -41,9 +42,9 @@ function getChannel(
   const result: string[] = marketsFiltered.map((market) => {
     assert.equal(market.exchange, EXCHANGE_NAME);
     const rawPair =
-      market.type === 'Spot'
-        ? market.id.toLowerCase()
-        : `${market.base}_${contractTypes[market.info.contract_type]}`;
+      market.type === 'Futures'
+        ? `${market.base}_${contractTypes[market.info.contract_type]}`
+        : market.id;
     switch (channeltype) {
       case 'BBO':
         return marketType === 'Spot' ? `market.${rawPair}.bbo` : `market.${rawPair}.depth.step6`;
@@ -88,7 +89,7 @@ export default async function crawl(
 
   const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
-  if (marketType === 'Spot') {
+  if (marketType === 'Spot' || marketType === 'Swap') {
     assert.equal(channels.length, channelTypes.length * pairs.length);
   }
 
@@ -186,7 +187,7 @@ export default async function crawl(
             };
             const rawPair = rawMsg.ch.split('.')[1];
             const market =
-              marketType === 'Spot' ? marketMap.get(rawPair)! : marketMapFutures.get(rawPair)!;
+              marketType === 'Futures' ? marketMapFutures.get(rawPair)! : marketMap.get(rawPair)!;
             const orderBookMsg: OrderBookMsg = {
               exchange: EXCHANGE_NAME,
               marketType,
@@ -228,7 +229,7 @@ export default async function crawl(
             };
             const rawPair = rawMsg.ch.split('.')[1];
             const market =
-              marketType === 'Spot' ? marketMap.get(rawPair)! : marketMapFutures.get(rawPair)!;
+              marketType === 'Futures' ? marketMapFutures.get(rawPair)! : marketMap.get(rawPair)!;
             const tradeMsges: TradeMsg[] = rawTradeMsg.data.map((x) => ({
               exchange: EXCHANGE_NAME,
               marketType,
@@ -241,7 +242,7 @@ export default async function crawl(
               price: x.price,
               quantity: x.amount,
               side: x.direction === 'sell',
-              trade_id: x.id.toString(), // TODO: bignumber
+              trade_id: (marketType === 'Spot' ? x.tradeId : x.id).toString(),
             }));
 
             tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
