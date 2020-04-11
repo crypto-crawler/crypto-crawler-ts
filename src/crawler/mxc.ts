@@ -39,8 +39,8 @@ function crawlOnePair(
 
   socket.on('connect', () => {
     logger.info('Socket.IO connected');
-    channelTypes.forEach((channelType) => {
-      const channel = getChannel(channelType);
+    const channels = new Set(channelTypes.map((type) => getChannel(type)));
+    channels.forEach((channel) => {
       socket.emit(channel, { symbol: pair });
     });
   });
