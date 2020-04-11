@@ -48,6 +48,7 @@ function chunkArray<T>(myArray: T[], chunk_size: number): T[][] {
 }
 
 function connect(
+  marketType: MarketType,
   markets: readonly Market[],
   logger: Logger,
   msgCallback: MsgCallback,
@@ -61,8 +62,8 @@ function connect(
   ws.on('open', () => {
     arr.forEach((x) => {
       const { channelType, pair } = x;
-      const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
-      assert.ok(market, `Can NOT find Bitfinex ${pair} Spot market`);
+      const market = markets.filter((m) => m.type === marketType && m.pair === pair)[0];
+      assert.ok(market, `Can NOT find Bitfinex ${pair} ${marketType} market`);
       const symbol = `t${market.id.toUpperCase()}`;
       switch (channelType) {
         case 'Trade':
@@ -85,7 +86,7 @@ function connect(
 
   arr.forEach((x) => {
     const { channelType, pair } = x;
-    const market = markets.filter((m) => m.type === 'Spot' && m.pair === pair)[0];
+    const market = markets.filter((m) => m.type === marketType && m.pair === pair)[0];
     assert.ok(market);
     assert.equal(market.exchange, EXCHANGE_NAME);
     assert.equal(pair, market.pair);
@@ -101,7 +102,7 @@ function connect(
           price: number;
         }): TradeMsg => ({
           exchange: EXCHANGE_NAME,
-          marketType: 'Spot',
+          marketType,
           pair,
           rawPair: market.id,
           channel,
@@ -161,7 +162,7 @@ function connect(
 
           const orderBookMsg: OrderBookMsg = {
             exchange: EXCHANGE_NAME,
-            marketType: 'Spot',
+            marketType,
             pair,
             rawPair: market.id,
             channel,
@@ -185,7 +186,7 @@ function connect(
 
           const tickerMsg: TickerMsg = {
             exchange: EXCHANGE_NAME,
-            marketType: 'Spot',
+            marketType,
             pair,
             rawPair: market.id,
             channel,
@@ -222,7 +223,7 @@ export default async function crawl(
   pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  assert.equal(marketType, 'Spot');
+  assert.ok(['Spot', 'Futures'].includes(marketType), `Bitfinex does NOT has ${marketType} market`);
   const [logger, markets] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const arr: { channelType: ChannelType; pair: string }[] = [];
@@ -234,7 +235,7 @@ export default async function crawl(
 
   const groups = chunkArray<{ channelType: ChannelType; pair: string }>(arr, NUM_CHANNELS_PER_WS);
 
-  const wsClients = groups.map((g) => connect(markets, logger, msgCallback, g));
+  const wsClients = groups.map((g) => connect(marketType, markets, logger, msgCallback, g));
 
   await Promise.all(wsClients.map((ws) => ws.open()));
 }
