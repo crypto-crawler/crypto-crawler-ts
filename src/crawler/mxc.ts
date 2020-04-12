@@ -29,13 +29,17 @@ function getChannel(channeltype: ChannelType): string {
 }
 
 // MXC allows only one pair per connection.
-function crawlOnePair(
+async function crawlOnePair(
   pair: string,
   channelTypes: readonly ChannelType[],
   msgCallback: MsgCallback,
   logger: Logger,
-): void {
-  const socket = io('wss://wbs.mxc.com', { reconnection: true, transports: ['websocket'] });
+): Promise<void> {
+  const socket = io('wss://wbs.mxc.com', {
+    autoConnect: false,
+    reconnection: true,
+    transports: ['websocket'],
+  });
 
   socket.on('connect', () => {
     logger.info('Socket.IO connected');
@@ -100,6 +104,8 @@ function crawlOnePair(
       msgCallback(orderBookMsg);
     }
   });
+
+  socket.open();
 }
 
 export default async function crawl(
@@ -111,5 +117,5 @@ export default async function crawl(
   assert.equal('Spot', marketType, 'MXC has only Spot market');
   const logger = createLogger(EXCHANGE_NAME);
 
-  pairs.forEach((pair) => crawlOnePair(pair, channelTypes, msgCallback, logger));
+  await Promise.all(pairs.map((pair) => crawlOnePair(pair, channelTypes, msgCallback, logger)));
 }
