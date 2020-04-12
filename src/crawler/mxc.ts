@@ -1,13 +1,16 @@
 import { strict as assert } from 'assert';
 import { MarketType } from 'crypto-markets';
-import io from 'socket.io-client';
 import { Logger } from 'winston';
+import WebSocket from 'ws';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import createLogger from '../util/logger';
 import { defaultMsgCallback, MsgCallback } from './index';
 
 const EXCHANGE_NAME = 'MXC';
+
+const WEBSOCKET_ENDPOINT = 'wss://wbs.mxc.com/socket.io/?EIO=3&transport=websocket';
+const SOCKETIO_PREFIX = '42';
 
 interface OrderBookAndTrades {
   symbol: string;
@@ -35,77 +38,93 @@ async function crawlOnePair(
   msgCallback: MsgCallback,
   logger: Logger,
 ): Promise<void> {
-  const socket = io('wss://wbs.mxc.com', {
-    autoConnect: false,
-    reconnection: true,
-    transports: ['websocket'],
-  });
+  const websocket = new WebSocket(WEBSOCKET_ENDPOINT);
 
-  socket.on('connect', () => {
-    logger.info('Socket.IO connected');
+  let interval: NodeJS.Timeout;
+  websocket.on('open', () => {
+    logger.info(`${websocket.url} connected`);
     const channels = new Set(channelTypes.map((type) => getChannel(type)));
     channels.forEach((channel) => {
-      socket.emit(channel, { symbol: pair });
+      websocket.send(`${SOCKETIO_PREFIX}${JSON.stringify([channel, { symbol: pair }])}`);
     });
+
+    interval = setInterval(() => {
+      websocket.send('2'); // hearbeat
+    }, 5000);
   });
 
-  socket.on('connecting', () => logger.info('Socket.IO connecting...'));
-  socket.on('reconnect', () => logger.warn('Socket.IO re-connected'));
-  socket.on('connect_timeout', () => logger.error('connect_timeout'));
-  socket.on('connect_error', (err: Error) => logger.error(err));
-  socket.on('disconnect', () => logger.error('Socket.IO disconnected'));
+  websocket.on('message', async (data) => {
+    const raw = data as string;
+    if (!raw.startsWith(SOCKETIO_PREFIX)) return;
 
-  socket.on('push.symbol', async (data: OrderBookAndTrades) => {
-    if (data.data.deals && channelTypes.includes('Trade')) {
-      const tradeMsges: TradeMsg[] = data.data.deals.map((x) => ({
-        exchange: EXCHANGE_NAME,
-        marketType: 'Spot',
-        pair: data.symbol,
-        rawPair: data.symbol,
-        channel: 'sub.symbol',
-        channelType: 'Trade',
-        timestamp: x.t,
-        raw: x,
-        price: parseFloat(x.p),
-        quantity: parseFloat(x.q),
-        side: x.T === 2,
-        trade_id: '', // TODO: MXC does NOT have trade ID
-      }));
+    const arr = JSON.parse(raw.slice(2));
+    const channel: string = arr[0];
 
-      await Promise.all(tradeMsges.map((tradeMsg) => msgCallback(tradeMsg)));
-    }
+    if (channel === 'push.symbol') {
+      const rawMsg: OrderBookAndTrades = arr[1];
 
-    if ((data.data.asks || data.data.bids) && channelTypes.includes('OrderBook')) {
-      const orderBookMsg: OrderBookMsg = {
-        exchange: EXCHANGE_NAME,
-        marketType: 'Spot',
-        pair: data.symbol,
-        rawPair: data.symbol,
-        channel: 'sub.symbol',
-        channelType: 'OrderBook',
-        timestamp: Date.now(),
-        raw: data,
-        asks: [],
-        bids: [],
-        full: false,
-      };
-      const parse = (x: { p: string; q: string; a: string }): OrderItem => ({
-        price: parseFloat(x.p),
-        quantity: parseFloat(x.q),
-        cost: parseFloat(x.a),
-      });
-      if (data.data.asks) {
-        orderBookMsg.asks = data.data.asks.map(parse);
-      }
-      if (data.data.bids) {
-        orderBookMsg.bids = data.data.bids.map(parse);
+      if (rawMsg.data.deals && channelTypes.includes('Trade')) {
+        const tradeMsges: TradeMsg[] = rawMsg.data.deals.map((x) => ({
+          exchange: EXCHANGE_NAME,
+          marketType: 'Spot',
+          pair: rawMsg.symbol,
+          rawPair: rawMsg.symbol,
+          channel: 'sub.symbol',
+          channelType: 'Trade',
+          timestamp: x.t,
+          raw: x,
+          price: parseFloat(x.p),
+          quantity: parseFloat(x.q),
+          side: x.T === 2,
+          trade_id: '', // TODO: MXC does NOT have trade ID
+        }));
+
+        await Promise.all(tradeMsges.map((tradeMsg) => msgCallback(tradeMsg)));
       }
 
-      await msgCallback(orderBookMsg);
+      if ((rawMsg.data.asks || rawMsg.data.bids) && channelTypes.includes('OrderBook')) {
+        const orderBookMsg: OrderBookMsg = {
+          exchange: EXCHANGE_NAME,
+          marketType: 'Spot',
+          pair: rawMsg.symbol,
+          rawPair: rawMsg.symbol,
+          channel: 'sub.symbol',
+          channelType: 'OrderBook',
+          timestamp: Date.now(),
+          raw: rawMsg,
+          asks: [],
+          bids: [],
+          full: false,
+        };
+        const parse = (x: { p: string; q: string; a: string }): OrderItem => ({
+          price: parseFloat(x.p),
+          quantity: parseFloat(x.q),
+          cost: parseFloat(x.a),
+        });
+        if (rawMsg.data.asks) {
+          orderBookMsg.asks = rawMsg.data.asks.map(parse);
+        }
+        if (rawMsg.data.bids) {
+          orderBookMsg.bids = rawMsg.data.bids.map(parse);
+        }
+
+        await msgCallback(orderBookMsg);
+      }
     }
   });
 
-  socket.open();
+  websocket.on('error', (error) => {
+    logger.error(JSON.stringify(error));
+    process.exit(1); // fail fast, pm2 will restart it
+  });
+
+  websocket.on('close', () => {
+    logger.info(`${websocket.url} disconnected, now re-connecting`);
+    clearInterval(interval);
+    setTimeout(() => {
+      crawlOnePair(pair, channelTypes, msgCallback, logger);
+    }, 1000);
+  });
 }
 
 export default async function crawl(
