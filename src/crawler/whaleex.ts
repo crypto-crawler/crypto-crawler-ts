@@ -4,7 +4,7 @@ import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { initBeforeCrawl } from './util';
+import { debug, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'WhaleEx';
 const WEBSOCKET_ENDPOINT = 'wss://www.whaleex.com/ws/websocket';
@@ -33,7 +33,7 @@ export default async function crawl(
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   assert.equal('Spot', marketType, 'WhaleEx has only Spot market');
-  const [logger, exchangeInfo] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
+  const [markets] = await initBeforeCrawl(EXCHANGE_NAME, pairs);
 
   const client = new Client({
     brokerURL: WEBSOCKET_ENDPOINT,
@@ -46,14 +46,14 @@ export default async function crawl(
   });
   client.onConnect = (frame: IFrame): void => {
     if (frame.command === 'CONNECTED') {
-      logger.info('Connected to Stomp successfully!');
+      debug('Connected to Stomp successfully!');
     } else {
       throw Error('Error connecting to server!');
     }
 
     channelTypes.forEach((channelType) => {
       pairs.forEach((pair) => {
-        const channel = getChannel(channelType, pair, exchangeInfo);
+        const channel = getChannel(channelType, pair, markets);
         client.subscribe(channel, async (message: Message) => {
           assert.equal(message.command, 'MESSAGE');
           assert.equal(channel, message.headers.destination);
@@ -129,8 +129,8 @@ export default async function crawl(
               break;
             }
             default:
-              logger.warn(`Unrecognized ChannelType: ${channelType}`);
-              logger.warn(message);
+              debug(`Unrecognized ChannelType: ${channelType}`);
+              debug(message);
               break;
           }
         });
@@ -139,7 +139,7 @@ export default async function crawl(
   };
 
   client.onStompError = (frame: IFrame): void => {
-    logger.error(frame);
+    debug(frame);
   };
 
   client.activate();

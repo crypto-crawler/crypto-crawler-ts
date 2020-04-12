@@ -1,11 +1,10 @@
 import { strict as assert } from 'assert';
 import { MarketType } from 'crypto-markets';
-import { Logger } from 'winston';
 import WebSocket from 'ws';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
-import createLogger from '../util/logger';
 import { defaultMsgCallback, MsgCallback } from './index';
+import { debug } from './util';
 
 const EXCHANGE_NAME = 'MXC';
 
@@ -36,13 +35,12 @@ async function crawlOnePair(
   pair: string,
   channelTypes: readonly ChannelType[],
   msgCallback: MsgCallback,
-  logger: Logger,
 ): Promise<void> {
   const websocket = new WebSocket(WEBSOCKET_ENDPOINT);
 
   let interval: NodeJS.Timeout;
   websocket.on('open', () => {
-    logger.info(`${websocket.url} connected`);
+    debug(`${websocket.url} connected`);
     const channels = new Set(channelTypes.map((type) => getChannel(type)));
     channels.forEach((channel) => {
       websocket.send(`${SOCKETIO_PREFIX}${JSON.stringify([channel, { symbol: pair }])}`);
@@ -114,15 +112,15 @@ async function crawlOnePair(
   });
 
   websocket.on('error', (error) => {
-    logger.error(JSON.stringify(error));
+    debug(JSON.stringify(error));
     process.exit(1); // fail fast, pm2 will restart it
   });
 
   websocket.on('close', () => {
-    logger.info(`${websocket.url} disconnected, now re-connecting`);
+    debug(`${websocket.url} disconnected, now re-connecting`);
     clearInterval(interval);
     setTimeout(() => {
-      crawlOnePair(pair, channelTypes, msgCallback, logger);
+      crawlOnePair(pair, channelTypes, msgCallback);
     }, 1000);
   });
 }
@@ -134,7 +132,6 @@ export default async function crawl(
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   assert.equal('Spot', marketType, 'MXC has only Spot market');
-  const logger = createLogger(EXCHANGE_NAME);
 
-  await Promise.all(pairs.map((pair) => crawlOnePair(pair, channelTypes, msgCallback, logger)));
+  await Promise.all(pairs.map((pair) => crawlOnePair(pair, channelTypes, msgCallback)));
 }

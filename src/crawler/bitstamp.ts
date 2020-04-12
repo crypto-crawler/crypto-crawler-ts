@@ -3,7 +3,7 @@ import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, getChannels, initBeforeCrawl } from './util';
+import { connect, debug, getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Bitstamp';
 const WEBSOCKET_ENDPOINT = 'wss://ws.bitstamp.net';
@@ -48,7 +48,7 @@ export default async function crawl(
 ): Promise<void> {
   assert.equal('Spot', marketType, 'Bitstamp has only Spot market');
 
-  const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
+  const [markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
   assert.equal(channels.length, channelTypes.length * pairs.length);
@@ -67,12 +67,12 @@ export default async function crawl(
         data.event === 'bts:subscription_succeeded' ||
         data.event === 'bts:unsubscription_succeeded'
       ) {
-        logger.info(data);
+        debug(data);
         return;
       }
       if (data.event === 'bts:request_reconnect') {
-        logger.warn(data);
-        logger.warn('Need to reconnect now');
+        debug(data);
+        debug('Need to reconnect now');
         return;
       }
       const channelType = getChannelType(data.channel);
@@ -156,8 +156,8 @@ export default async function crawl(
           break;
         }
         default:
-          logger.warn(`Unrecognized CrawlType: ${channelType}`);
-          logger.warn(data);
+          debug(`Unrecognized CrawlType: ${channelType}`);
+          debug(data);
       }
     },
     channels.map((channel) => ({
@@ -166,6 +166,5 @@ export default async function crawl(
         channel,
       },
     })),
-    logger,
   );
 }

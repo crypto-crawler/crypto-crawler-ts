@@ -4,7 +4,7 @@ import WebSocket from 'ws';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { getChannels, initBeforeCrawl } from './util';
+import { debug, getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Newdex';
 const WEBSOCKET_ENDPOINT = 'wss://ws.newdex.io';
@@ -33,13 +33,13 @@ export default async function crawl(
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   assert.equal('Spot', marketType, 'Newdex has only Spot market');
-  const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
+  const [markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const connect = (url: string): void => {
     const websocket = new WebSocket(url);
 
     websocket.on('open', () => {
-      logger!.info(`${websocket.url} connected`);
+      debug(`${websocket.url} connected`);
       websocket.send(JSON.stringify({ type: 'handshake', version: '1.4' }));
     });
 
@@ -49,7 +49,7 @@ export default async function crawl(
       const rawMsg = JSON.parse(raw) as { type: string; [key: string]: any };
       switch (rawMsg.type) {
         case 'handshake': {
-          logger.info('Handshake succeeded!');
+          debug('Handshake succeeded!');
 
           getChannels(marketType, channelTypes, pairs, markets, getChannel).forEach((channel) => {
             websocket.send(
@@ -114,7 +114,7 @@ export default async function crawl(
             });
             await msgCallback(msg);
           } else {
-            logger.warn(rawMsg);
+            debug(rawMsg);
           }
           break;
         }
@@ -125,11 +125,11 @@ export default async function crawl(
     });
 
     websocket.on('error', (error) => {
-      logger!.error(JSON.stringify(error));
+      debug(JSON.stringify(error));
       process.exit(1); // fail fast, pm2 will restart it
     });
     websocket.on('close', () => {
-      logger!.info(`${websocket.url} disconnected, now re-connecting`);
+      debug(`${websocket.url} disconnected, now re-connecting`);
       setTimeout(() => {
         connect(url);
       }, 1000);

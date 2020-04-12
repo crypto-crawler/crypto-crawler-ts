@@ -4,7 +4,7 @@ import { MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { initBeforeCrawl } from './util';
+import { debug, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'CoinbasePro';
 const WEBSOCKET_ENDPOINT = 'wss://ws-feed.pro.coinbase.com';
@@ -28,7 +28,7 @@ export default async function crawl(
 ): Promise<void> {
   assert.equal('Spot', marketType, 'CoinbasePro has only Spot market');
 
-  const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
+  const [markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const channels = channelTypes.map((x) => getChannel(x));
 
@@ -40,12 +40,12 @@ export default async function crawl(
   );
 
   websocket.on('open', () => {
-    logger.info(`${WEBSOCKET_ENDPOINT} connected`);
+    debug(`${WEBSOCKET_ENDPOINT} connected`);
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   websocket.on('message', (data: { type: string; [key: string]: any }) => {
     if (data.type === 'error') {
-      logger.error(data);
+      debug(data);
       return;
     }
     if (data.type === 'heartbeat') {
@@ -58,8 +58,8 @@ export default async function crawl(
       return; // ignore, wait for the exchange to process  this message
     }
     if (data.type === 'subscriptions') {
-      logger.info('subscriptions succeeded');
-      logger.info(data);
+      debug('subscriptions succeeded');
+      debug(data);
       return;
     }
 
@@ -152,15 +152,15 @@ export default async function crawl(
         break;
       }
       default:
-        logger.warn(`Unrecognized type: ${data.type}`);
+        debug(`Unrecognized type: ${data.type}`);
     }
   });
   websocket.on('error', (error) => {
-    logger.error(JSON.stringify(error));
+    debug(JSON.stringify(error));
     process.exit(1); // fail fast, pm2 will restart it
   });
   websocket.on('close', () => {
-    logger.info(`${WEBSOCKET_ENDPOINT} disconnected`);
+    debug(`${WEBSOCKET_ENDPOINT} disconnected`);
     process.exit(); // pm2 will restart it
   });
 }

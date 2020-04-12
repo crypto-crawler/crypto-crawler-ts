@@ -3,7 +3,7 @@ import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, getChannels, initBeforeCrawl } from './util';
+import { connect, debug, getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Kraken';
 const WEBSOCKET_ENDPOINT = 'wss://ws.kraken.com';
@@ -64,7 +64,7 @@ export default async function crawl(
 ): Promise<void> {
   assert.equal('Spot', marketType, 'Kraken has only Spot market');
 
-  const [logger, markets] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
+  const [markets] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
   const marketMap = buildPairMap(markets);
 
   const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
@@ -80,7 +80,7 @@ export default async function crawl(
         rawMsg.event === 'systemStatus' ||
         rawMsg.event === 'subscriptionStatus'
       ) {
-        logger.info(rawMsg);
+        debug(rawMsg);
         return;
       }
 
@@ -194,7 +194,7 @@ export default async function crawl(
             break;
           }
           default:
-            logger.warn(`Unrecognized channel type: ${channelType}`);
+            debug(`Unrecognized channel type: ${channelType}`);
         }
       }
     },
@@ -207,6 +207,5 @@ export default async function crawl(
         name: channel,
       },
     })),
-    logger,
   );
 }

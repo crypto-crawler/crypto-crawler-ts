@@ -3,7 +3,7 @@ import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, getChannels, initBeforeCrawl } from './util';
+import { connect, debug, getChannels, initBeforeCrawl } from './util';
 
 const EXCHANGE_NAME = 'Binance';
 
@@ -66,7 +66,7 @@ export default async function crawl(
 ): Promise<void> {
   assert.ok(['Spot', 'Swap'].includes(marketType), 'Binance has only Spot and Swap markets');
 
-  const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
+  const [markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
@@ -213,11 +213,10 @@ export default async function crawl(
           break;
         }
         default:
-          logger.warn(`Unrecognized CrawlType: ${channelType}`);
-          logger.warn(rawMsg);
+          debug(`Unrecognized CrawlType: ${channelType}`);
+          debug(rawMsg);
       }
     },
     undefined,
-    logger,
   );
 }

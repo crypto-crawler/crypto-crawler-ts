@@ -1,10 +1,9 @@
 import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
-import { Logger } from 'winston';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { initBeforeCrawl } from './util';
+import { debug, initBeforeCrawl } from './util';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { WSv2 } = require('bitfinex-api-node');
@@ -50,14 +49,13 @@ function chunkArray<T>(myArray: T[], chunk_size: number): T[][] {
 function connect(
   marketType: MarketType,
   markets: readonly Market[],
-  logger: Logger,
   msgCallback: MsgCallback,
   arr: { channelType: ChannelType; pair: string }[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any {
   const ws = new WSv2({ transform: true, autoReconnect: true });
 
-  ws.on('error', (err: Error) => logger.error(err));
+  ws.on('error', (err: Error) => debug(err));
 
   ws.on('open', () => {
     arr.forEach((x) => {
@@ -224,7 +222,7 @@ export default async function crawl(
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
   assert.ok(['Spot', 'Futures'].includes(marketType), `Bitfinex does NOT has ${marketType} market`);
-  const [logger, markets] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
+  const [markets] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const arr: { channelType: ChannelType; pair: string }[] = [];
   pairs.forEach((pair) => {
@@ -235,7 +233,7 @@ export default async function crawl(
 
   const groups = chunkArray<{ channelType: ChannelType; pair: string }>(arr, NUM_CHANNELS_PER_WS);
 
-  const wsClients = groups.map((g) => connect(marketType, markets, logger, msgCallback, g));
+  const wsClients = groups.map((g) => connect(marketType, markets, msgCallback, g));
 
   await Promise.all(wsClients.map((ws) => ws.open()));
 }

@@ -1,11 +1,12 @@
 import { strict as assert } from 'assert';
 import fetchMarkets, { Market, MarketType } from 'crypto-markets';
+import Debug from 'debug';
 import Pako from 'pako';
-import { Logger } from 'winston';
 import WebSocket from 'ws';
 import { ChannelType } from '../pojo/channel_type';
 import { BboMsg, OrderBookMsg } from '../pojo/msg';
-import createLogger from '../util/logger';
+
+export const debug = Debug.debug('crypto-crawler');
 
 export function getChannels(
   marketType: MarketType,
@@ -35,16 +36,11 @@ export function connect(
   onMessage: (data: WebSocket.Data) => void,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   subscriptions?: readonly { [key: string]: any }[],
-  logger?: Logger,
 ): void {
   const websocket = new WebSocket(url);
 
-  if (logger === undefined) {
-    logger = (console as unknown) as Logger; // eslint-disable-line no-param-reassign
-  }
-
   websocket.on('open', () => {
-    logger!.info(`${websocket.url} connected`);
+    debug(`${websocket.url} connected`);
 
     if (subscriptions !== undefined) {
       subscriptions.forEach((x) => {
@@ -85,13 +81,13 @@ export function connect(
   });
 
   websocket.on('error', (error) => {
-    logger!.error(JSON.stringify(error));
+    debug(JSON.stringify(error));
     process.exit(1); // fail fast, pm2 will restart it
   });
   websocket.on('close', () => {
-    logger!.info(`${websocket.url} disconnected, now re-connecting`);
+    debug(`${websocket.url} disconnected, now re-connecting`);
     setTimeout(() => {
-      connect(url, onMessage, subscriptions, logger);
+      connect(url, onMessage, subscriptions);
     }, 1000);
   });
 }
@@ -108,9 +104,7 @@ export async function initBeforeCrawl(
   exchange: string,
   pairs: readonly string[],
   marketType: MarketType = 'Spot',
-): Promise<[Logger, readonly Market[], Map<string, Market>]> {
-  const logger = createLogger(exchange);
-
+): Promise<[readonly Market[], Map<string, Market>]> {
   let error: Error | undefined;
   let markets: readonly Market[] = [];
   // retry 3 times
@@ -133,9 +127,9 @@ export async function initBeforeCrawl(
   //   // clear pairs and copy all pairs into it
   //   pairs.splice(0, pairs.length, ...markets.map((x) => x.pair));
   // }
-  logger.info(pairs);
+  debug(pairs);
 
-  return [logger, markets, marketMap];
+  return [markets, marketMap];
 }
 
 export function convertFullOrderBookMsgToBboMsg(orderBookMsg: OrderBookMsg): BboMsg {

@@ -4,7 +4,13 @@ import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, convertFullOrderBookMsgToBboMsg, getChannels, initBeforeCrawl } from './util';
+import {
+  connect,
+  convertFullOrderBookMsgToBboMsg,
+  debug,
+  getChannels,
+  initBeforeCrawl,
+} from './util';
 
 const EXCHANGE_NAME = 'OKEx';
 
@@ -78,7 +84,7 @@ export default async function crawl(
   pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  const [logger, markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
+  const [markets, marketMap] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
@@ -92,14 +98,14 @@ export default async function crawl(
       const raw = Pako.inflateRaw(data as pako.Data, { to: 'string' });
       const obj = JSON.parse(raw);
       if (obj.event === 'error') {
-        logger.error(obj);
+        debug(obj);
         process.exit(-1); // fail fast
       } else if (obj.event === 'subscribe') {
-        logger.info(obj);
+        debug(obj);
         return;
       }
       if (!(obj.table && obj.data)) {
-        logger.warn(obj);
+        debug(obj);
         return;
       }
       const rawMsg = obj as {
@@ -265,10 +271,9 @@ export default async function crawl(
           break;
         }
         default:
-          logger.error(`Unknown channel: ${obj.table}`);
+          debug(`Unknown channel: ${obj.table}`);
       }
     },
     [{ op: 'subscribe', args: channels }],
-    logger,
   );
 }
