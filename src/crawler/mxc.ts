@@ -55,7 +55,7 @@ async function crawlOnePair(
   socket.on('connect_error', (err: Error) => logger.error(err));
   socket.on('disconnect', () => logger.error('Socket.IO disconnected'));
 
-  socket.on('push.symbol', (data: OrderBookAndTrades) => {
+  socket.on('push.symbol', async (data: OrderBookAndTrades) => {
     if (data.data.deals && channelTypes.includes('Trade')) {
       const tradeMsges: TradeMsg[] = data.data.deals.map((x) => ({
         exchange: EXCHANGE_NAME,
@@ -72,7 +72,7 @@ async function crawlOnePair(
         trade_id: '', // TODO: MXC does NOT have trade ID
       }));
 
-      tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
+      await Promise.all(tradeMsges.map((tradeMsg) => msgCallback(tradeMsg)));
     }
 
     if ((data.data.asks || data.data.bids) && channelTypes.includes('OrderBook')) {
@@ -101,7 +101,7 @@ async function crawlOnePair(
         orderBookMsg.bids = data.data.bids.map(parse);
       }
 
-      msgCallback(orderBookMsg);
+      await msgCallback(orderBookMsg);
     }
   });
 
