@@ -37,18 +37,19 @@ There is only one API in this library:
 /**
  * Crawl messages from a crypto exchange.
  *
- * @export
- * @param {SupportedExchange} exchange The crypto exchange name
- * @param {ChannelType[]} channelTypes types of channels you want to crawl
- * @param {string[]} [pairs=[]] pairs you want to crawl
- * @param {ProcessMessageCallback} [processMsgCallback=defaultProcessMessageCallback] the callback to process messages
- * @returns {Promise<void>}
+ * @param exchange The crypto exchange name
+ * @param marketType Market type, e.g., Spot, Futures
+ * @param channelTypes Channel types to crawl, e.g., Trade, BBO, OrderBook
+ * @param pairs Trading pairs, e.g., BTC_USDT
+ * @param msgCallback The callback function to process messages
+ * @returns void
  */
-async function crawl(
-  exchange: SupportedExchange,
-  channelTypes: ChannelType[],
-  pairs?: string[],
-  processMsgCallback?: ProcessMessageCallback,
+export default function crawl(
+  exchange: string,
+  marketType: MarketType,
+  channelTypes: readonly ChannelType[],
+  pairs: readonly string[],
+  msgCallback?: MsgCallback,
 ): Promise<void>;
 ```
 
