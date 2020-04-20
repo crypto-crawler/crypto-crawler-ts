@@ -94,7 +94,7 @@ export default async function crawl(
 
   connect(
     WEBSOCKET_ENDPOINT,
-    (data) => {
+    async (data) => {
       const raw = Pako.inflateRaw(data as pako.Data, { to: 'string' });
       const obj = JSON.parse(raw);
       if (obj.event === 'error') {
@@ -236,7 +236,10 @@ export default async function crawl(
             };
           });
 
-          tickerMsges.forEach(async (tickerMsg) => msgCallback(tickerMsg));
+          for (let i = 0; i < tickerMsges.length; i += 1) {
+            // eslint-disable-next-line no-await-in-loop
+            await msgCallback(tickerMsges[i]);
+          }
           break;
         }
         case 'Trade': {
@@ -267,7 +270,10 @@ export default async function crawl(
             trade_id: x.trade_id,
           }));
 
-          tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
+          for (let i = 0; i < tradeMsges.length; i += 1) {
+            // eslint-disable-next-line no-await-in-loop
+            await msgCallback(tradeMsges[i]);
+          }
           break;
         }
         default:

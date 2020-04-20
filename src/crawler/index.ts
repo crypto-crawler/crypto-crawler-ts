@@ -3,6 +3,7 @@ import { Msg } from '../pojo/msg';
 export const EXCHANGES = [
   'Binance',
   'Bitfinex',
+  'BitMEX',
   'Bitstamp',
   'CoinbasePro',
   'Huobi',

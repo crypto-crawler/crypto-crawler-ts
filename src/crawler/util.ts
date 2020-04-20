@@ -82,7 +82,8 @@ export function connect(
 
   websocket.on('error', (error) => {
     debug(JSON.stringify(error));
-    process.exit(1); // fail fast, pm2 will restart it
+    websocket.close();
+    // process.exit(1); // fail fast, pm2 will restart it
   });
   websocket.on('close', () => {
     debug(`${websocket.url} disconnected, now re-connecting`);
