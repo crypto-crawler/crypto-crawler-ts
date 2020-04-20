@@ -62,6 +62,6 @@ export default async function crawl(
   }
 }
 
-export { MsgCallback } from './crawler';
+export { MsgCallback, SUPPORTED_EXCHANGES } from './crawler';
 export { ChannelType } from './pojo/channel_type';
 export * from './pojo/msg';

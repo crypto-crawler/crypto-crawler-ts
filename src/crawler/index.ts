@@ -1,6 +1,6 @@
 import { Msg } from '../pojo/msg';
 
-export const EXCHANGES = [
+export const SUPPORTED_EXCHANGES = [
   'Binance',
   'Bitfinex',
   'BitMEX',

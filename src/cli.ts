@@ -4,13 +4,13 @@ import chalk from 'chalk';
 import { MarketType, MARKET_TYPES } from 'crypto-markets';
 import figlet from 'figlet';
 import yargs from 'yargs';
-import { EXCHANGES } from './crawler';
+import { SUPPORTED_EXCHANGES } from './crawler';
 import crawl from './index';
 import { ChannelType, CHANNEL_TYPES } from './pojo/channel_type';
 
 const { argv } = yargs.options({
   exchange: {
-    choices: EXCHANGES,
+    choices: SUPPORTED_EXCHANGES,
     type: 'string',
     demandOption: true,
     default: 'Binance',
