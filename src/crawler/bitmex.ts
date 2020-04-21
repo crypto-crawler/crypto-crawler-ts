@@ -258,10 +258,10 @@ export default async function crawl(
                 assert.equal(rawTradeMsg.size, rawTradeMsg.foreignNotional);
               }
             } else if (market.type === 'Futures') {
-              if (market.base !== 'BTC') {
-                assert.equal(rawTradeMsg.homeNotional, rawTradeMsg.size);
+              if (market.base === 'BTC') {
+                assert.equal(rawTradeMsg.size, rawTradeMsg.foreignNotional);
               } else {
-                assert.equal(rawTradeMsg.foreignNotional, rawTradeMsg.size);
+                assert.equal(rawTradeMsg.homeNotional, rawTradeMsg.size);
               }
             }
 
