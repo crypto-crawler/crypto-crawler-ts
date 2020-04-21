@@ -4,7 +4,9 @@ import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
 import { BboMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, debug, getChannels, initBeforeCrawl } from './util';
+import { calcQuantity, connect, debug, getChannels, initBeforeCrawl } from './util';
+
+// doc https://huobiapi.github.io/docs/spot/v1/en/
 
 const EXCHANGE_NAME = 'Huobi';
 
@@ -128,6 +130,8 @@ export default async function crawl(
                 ask: string;
                 askSize: string;
               };
+              const market = marketMap.get(rawBboMsg.symbol)!;
+
               const bboMsg: BboMsg = {
                 exchange: EXCHANGE_NAME,
                 marketType,
@@ -138,9 +142,17 @@ export default async function crawl(
                 timestamp: rawMsg.ts,
                 raw: rawMsg,
                 bidPrice: parseFloat(rawBboMsg.bid),
-                bidQuantity: parseFloat(rawBboMsg.bidSize),
+                bidQuantity: calcQuantity(
+                  market,
+                  parseFloat(rawBboMsg.bidSize),
+                  parseFloat(rawBboMsg.bid),
+                ),
                 askPrice: parseFloat(rawBboMsg.ask),
-                askQuantity: parseFloat(rawBboMsg.askSize),
+                askQuantity: calcQuantity(
+                  market,
+                  parseFloat(rawBboMsg.askSize),
+                  parseFloat(rawBboMsg.ask),
+                ),
               };
 
               msgCallback(bboMsg);
@@ -154,7 +166,8 @@ export default async function crawl(
                 prevSeqNum?: number;
               };
               const rawPair = rawMsg.ch.split('.')[1];
-              const market = marketMapFutures.get(rawPair)!;
+              const market =
+                marketType === 'Futures' ? marketMapFutures.get(rawPair)! : marketMap.get(rawPair)!;
 
               const bboMsg: BboMsg = {
                 exchange: EXCHANGE_NAME,
@@ -166,9 +179,17 @@ export default async function crawl(
                 timestamp: rawMsg.ts,
                 raw: rawMsg,
                 bidPrice: rawOrderBookMsg.bids[0][0],
-                bidQuantity: rawOrderBookMsg.bids[0][1],
+                bidQuantity: calcQuantity(
+                  market,
+                  rawOrderBookMsg.bids[0][1],
+                  rawOrderBookMsg.bids[0][0],
+                ),
                 askPrice: rawOrderBookMsg.asks[0][0],
-                askQuantity: rawOrderBookMsg.asks[0][1],
+                askQuantity: calcQuantity(
+                  market,
+                  rawOrderBookMsg.asks[0][1],
+                  rawOrderBookMsg.asks[0][0],
+                ),
               };
 
               msgCallback(bboMsg);
@@ -201,16 +222,16 @@ export default async function crawl(
               bids: [],
               full: rawOrderBookMsg.seqNum === undefined,
             };
-            orderBookMsg.asks = rawOrderBookMsg.asks.map((x) => ({
-              price: x[0],
-              quantity: x[1],
-              cost: x[0] * x[1],
-            }));
-            orderBookMsg.bids = rawOrderBookMsg.bids.map((x) => ({
-              price: x[0],
-              quantity: x[1],
-              cost: x[0] * x[1],
-            }));
+            const parse = (x: number[]): { price: number; quantity: number; cost: number } => {
+              const quantity = calcQuantity(market, x[1], x[0]);
+              return {
+                price: x[0],
+                quantity,
+                cost: quantity * x[0],
+              };
+            };
+            orderBookMsg.asks = rawOrderBookMsg.asks.map((x) => parse(x));
+            orderBookMsg.bids = rawOrderBookMsg.bids.map((x) => parse(x));
             msgCallback(orderBookMsg);
             break;
           }
@@ -240,7 +261,7 @@ export default async function crawl(
               timestamp: x.ts,
               raw: x,
               price: x.price,
-              quantity: x.amount,
+              quantity: calcQuantity(market, x.amount, x.price),
               side: x.direction === 'sell',
               trade_id: (marketType === 'Spot' ? x.tradeId : x.id).toString(),
             }));

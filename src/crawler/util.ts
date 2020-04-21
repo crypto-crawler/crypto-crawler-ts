@@ -153,3 +153,12 @@ export function convertFullOrderBookMsgToBboMsg(orderBookMsg: OrderBookMsg): Bbo
   };
   return bboMsg;
 }
+
+export function calcQuantity(market: Market, amount: number, price: number): number {
+  if (market.type === 'Spot') {
+    return amount;
+  }
+  assert.ok(Number.isInteger(amount));
+  const cost = market.base === 'BTC' ? amount * 100 : amount * 10;
+  return cost / price;
+}
