@@ -232,15 +232,24 @@ export default async function crawl(
             const market = marketMap.get(arr[0].symbol)!;
             assert.ok(market);
 
-            let quantity = rawTradeMsg.size / rawTradeMsg.price;
-            if (market.type === 'Swap') {
-              if (market.base !== 'BTC') {
-                quantity = rawTradeMsg.foreignNotional / rawTradeMsg.price;
-              }
-            } else if (market.type === 'Futures') {
-              if (market.base !== 'BTC') {
-                quantity = rawTradeMsg.size;
-              }
+            const quantity = rawTradeMsg.homeNotional;
+            // rawTradeMsg.foreignNotional === quantity * rawTradeMsg.price
+            assert.ok(
+              Math.abs(1 - rawTradeMsg.foreignNotional / (quantity * rawTradeMsg.price)) < 0.0001,
+            );
+
+            if (market.base === 'BTC' || market.quote === 'BTC') {
+              assert.equal(
+                1e8 *
+                  (market.base === 'BTC' ? rawTradeMsg.homeNotional : rawTradeMsg.foreignNotional),
+                rawTradeMsg.grossValue,
+              );
+            }
+            if (market.quote === 'USD') {
+              assert.equal(rawTradeMsg.size, rawTradeMsg.foreignNotional);
+            }
+            if (market.type === 'Futures') {
+              assert.equal(rawTradeMsg.homeNotional, rawTradeMsg.size);
             }
 
             const tradeMsg: TradeMsg = {
