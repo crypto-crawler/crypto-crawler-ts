@@ -238,18 +238,31 @@ export default async function crawl(
               Math.abs(1 - rawTradeMsg.foreignNotional / (quantity * rawTradeMsg.price)) < 0.0001,
             );
 
+            // Check the grossValue field
             if (market.base === 'BTC' || market.quote === 'BTC') {
               assert.equal(
-                1e8 *
-                  (market.base === 'BTC' ? rawTradeMsg.homeNotional : rawTradeMsg.foreignNotional),
+                Math.round(
+                  1e8 *
+                    (market.base === 'BTC'
+                      ? rawTradeMsg.homeNotional
+                      : rawTradeMsg.foreignNotional),
+                ),
                 rawTradeMsg.grossValue,
               );
             }
-            if (market.quote === 'USD') {
-              assert.equal(rawTradeMsg.size, rawTradeMsg.foreignNotional);
-            }
-            if (market.type === 'Futures') {
-              assert.equal(rawTradeMsg.homeNotional, rawTradeMsg.size);
+
+            // The field size has different meanings
+            if (market.type === 'Swap') {
+              assert.equal(market.quote, 'USD');
+              if (market.base === 'BTC') {
+                assert.equal(rawTradeMsg.size, rawTradeMsg.foreignNotional);
+              }
+            } else if (market.type === 'Futures') {
+              if (market.base !== 'BTC') {
+                assert.equal(rawTradeMsg.homeNotional, rawTradeMsg.size);
+              } else {
+                assert.equal(rawTradeMsg.foreignNotional, rawTradeMsg.size);
+              }
             }
 
             const tradeMsg: TradeMsg = {
