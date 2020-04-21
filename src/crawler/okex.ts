@@ -5,12 +5,15 @@ import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import {
+  calcQuantity,
   connect,
   convertFullOrderBookMsgToBboMsg,
   debug,
   getChannels,
   initBeforeCrawl,
 } from './util';
+
+// doc https://www.okex.com/docs/en/
 
 const EXCHANGE_NAME = 'OKEx';
 
@@ -128,10 +131,12 @@ export default async function crawl(
             ];
           };
           assert.equal(rawOrderBookMsg.data.length, 1);
+          const market = marketMap.get(rawOrderBookMsg.data[0].instrument_id)!;
+
           const orderBookMsg: OrderBookMsg = {
             exchange: EXCHANGE_NAME,
             marketType,
-            pair: marketMap.get(rawOrderBookMsg.data[0].instrument_id)!.pair,
+            pair: market.pair,
             rawPair: rawOrderBookMsg.data[0].instrument_id,
             channel: rawOrderBookMsg.table,
             channelType: 'OrderBook',
@@ -141,11 +146,15 @@ export default async function crawl(
             bids: [],
             full: true,
           };
-          const parse = (item: [string, string, number]): OrderItem => ({
-            price: parseFloat(item[0]),
-            quantity: parseFloat(item[1]),
-            cost: parseFloat(item[0]) * parseFloat(item[1]),
-          });
+          const parse = (item: [string, string, number]): OrderItem => {
+            const price = parseFloat(item[0]);
+            const quantity = calcQuantity(market, parseFloat(item[1]), price);
+            return {
+              price,
+              quantity,
+              cost: quantity * price,
+            };
+          };
           orderBookMsg.asks = rawOrderBookMsg.data[0].asks.map((x) => parse(x));
           orderBookMsg.bids = rawOrderBookMsg.data[0].bids.map((x) => parse(x));
 
@@ -168,10 +177,12 @@ export default async function crawl(
             ];
           };
           assert.equal(rawOrderBookMsg.data.length, 1);
+          const market = marketMap.get(rawOrderBookMsg.data[0].instrument_id)!;
+
           const orderBookMsg: OrderBookMsg = {
             exchange: EXCHANGE_NAME,
             marketType,
-            pair: marketMap.get(rawOrderBookMsg.data[0].instrument_id)!.pair,
+            pair: market.pair,
             rawPair: rawOrderBookMsg.data[0].instrument_id,
             channel: rawOrderBookMsg.table,
             channelType,
@@ -181,11 +192,15 @@ export default async function crawl(
             bids: [],
             full: rawOrderBookMsg.action === 'partial',
           };
-          const parse = (item: [string, string, number]): OrderItem => ({
-            price: parseFloat(item[0]),
-            quantity: parseFloat(item[1]),
-            cost: parseFloat(item[0]) * parseFloat(item[1]),
-          });
+          const parse = (item: [string, string, number]): OrderItem => {
+            const price = parseFloat(item[0]);
+            const quantity = calcQuantity(market, parseFloat(item[1]), price);
+            return {
+              price,
+              quantity,
+              cost: quantity * price,
+            };
+          };
           orderBookMsg.asks = rawOrderBookMsg.data[0].asks.map((x) => parse(x));
           orderBookMsg.bids = rawOrderBookMsg.data[0].bids.map((x) => parse(x));
 
@@ -223,7 +238,7 @@ export default async function crawl(
               timestamp: new Date(x.timestamp).getTime(),
               raw: x,
               last_price: parseFloat(x.last),
-              last_quantity: parseFloat(x.last_qty),
+              last_quantity: parseFloat(x.last_qty), // TODO: calcQuantity()
               best_bid_price: parseFloat(x.best_bid),
               best_bid_quantity: parseFloat(x.best_bid_size),
               best_ask_price: parseFloat(x.best_ask),
@@ -255,20 +270,29 @@ export default async function crawl(
               trade_id: string;
             }>;
           };
-          const tradeMsges: TradeMsg[] = rawTradeMsg.data.map((x) => ({
-            exchange: EXCHANGE_NAME,
-            marketType,
-            pair: marketMap.get(x.instrument_id)!.pair,
-            rawPair: x.instrument_id,
-            channel: rawMsg.table,
-            channelType,
-            timestamp: new Date(x.timestamp).getTime(),
-            raw: x,
-            price: parseFloat(x.price),
-            quantity: parseFloat(marketType === 'Futures' ? x.qty : x.size),
-            side: x.side === 'sell',
-            trade_id: x.trade_id,
-          }));
+
+          const tradeMsges: TradeMsg[] = rawTradeMsg.data.map((x) => {
+            const market = marketMap.get(x.instrument_id)!;
+
+            return {
+              exchange: EXCHANGE_NAME,
+              marketType,
+              pair: market.pair,
+              rawPair: x.instrument_id,
+              channel: rawMsg.table,
+              channelType,
+              timestamp: new Date(x.timestamp).getTime(),
+              raw: x,
+              price: parseFloat(x.price),
+              quantity: calcQuantity(
+                market,
+                parseFloat(marketType === 'Futures' ? x.qty : x.size),
+                parseFloat(x.price),
+              ),
+              side: x.side === 'sell',
+              trade_id: x.trade_id,
+            };
+          });
 
           for (let i = 0; i < tradeMsges.length; i += 1) {
             // eslint-disable-next-line no-await-in-loop
