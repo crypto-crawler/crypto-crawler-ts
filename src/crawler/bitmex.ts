@@ -51,6 +51,19 @@ function getChannelType(channel: string): ChannelType {
   return channelType;
 }
 
+export function calcQuantity(market: Market, size: number, price: number): number {
+  if (market.base === 'BTC') {
+    return size / price;
+  }
+  if (market.type === 'Swap') {
+    return size; // TODO: ETHUSD and XRPUSD are dynamic
+  }
+  if (market.type === 'Futures') {
+    return size;
+  }
+  return size;
+}
+
 export default async function crawl(
   marketType: MarketType,
   channelTypes: readonly ChannelType[],
@@ -100,20 +113,21 @@ export default async function crawl(
           };
 
           const rawBboMsg = tmp.data[tmp.data.length - 1]; // the last element is the newest quote
+          const market = marketMap.get(rawBboMsg.symbol)!;
 
           const msg: BboMsg = {
             exchange: EXCHANGE_NAME,
             marketType,
-            pair: marketMap.get(rawBboMsg.symbol)!.pair,
+            pair: market.pair,
             rawPair: rawBboMsg.symbol,
             channel,
             channelType,
             timestamp: new Date(rawBboMsg.timestamp).getTime(),
             raw: rawBboMsg,
             bidPrice: rawBboMsg.bidPrice,
-            bidQuantity: rawBboMsg.bidSize,
+            bidQuantity: calcQuantity(market, rawBboMsg.bidSize, rawBboMsg.bidPrice),
             askPrice: rawBboMsg.askPrice,
-            askQuantity: rawBboMsg.askSize,
+            askQuantity: calcQuantity(market, rawBboMsg.askSize, rawBboMsg.askPrice),
           };
 
           await msgCallback(msg);
@@ -176,19 +190,9 @@ export default async function crawl(
             assert.ok(idPriceMap.has(item.id));
             const price = idPriceMap.get(item.id)!;
 
-            let cost = rawOrderBookMsg.action === 'delete' ? 0 : item.size;
-            let quantity = rawOrderBookMsg.action === 'delete' ? 0 : item.size / price;
-
-            if (market.type === 'Swap') {
-              if (market.base !== 'BTC') {
-                quantity = item.size / price;
-              }
-            } else if (market.type === 'Futures') {
-              if (market.base !== 'BTC') {
-                quantity = item.size; // TODO
-                cost = quantity * price;
-              }
-            }
+            const quantity =
+              rawOrderBookMsg.action === 'delete' ? 0 : calcQuantity(market, item.size, price);
+            const cost = quantity * price;
 
             const result: OrderItem = {
               price,
