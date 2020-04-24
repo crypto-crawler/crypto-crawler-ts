@@ -77,7 +77,7 @@ async function crawlOnePair(
           trade_id: '', // TODO: MXC does NOT have trade ID
         }));
 
-        await Promise.all(tradeMsges.map((tradeMsg) => msgCallback(tradeMsg)));
+        tradeMsges.forEach((tradeMsg) => msgCallback(tradeMsg));
       }
 
       if ((rawMsg.data.asks || rawMsg.data.bids) && channelTypes.includes('OrderBook')) {
@@ -106,7 +106,7 @@ async function crawlOnePair(
           orderBookMsg.bids = rawMsg.data.bids.map(parse);
         }
 
-        await msgCallback(orderBookMsg);
+        msgCallback(orderBookMsg);
       }
     }
   });
@@ -133,5 +133,5 @@ export default async function crawl(
 ): Promise<void> {
   assert.equal('Spot', marketType, 'MXC has only Spot market');
 
-  await Promise.all(pairs.map((pair) => crawlOnePair(pair, channelTypes, msgCallback)));
+  pairs.forEach((pair) => crawlOnePair(pair, channelTypes, msgCallback));
 }

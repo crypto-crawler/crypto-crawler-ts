@@ -130,7 +130,7 @@ export default async function crawl(
             askQuantity: calcQuantity(market, rawBboMsg.askSize, rawBboMsg.askPrice),
           };
 
-          await msgCallback(msg);
+          msgCallback(msg);
           break;
         }
         case 'orderBookL2_25': {
@@ -215,7 +215,7 @@ export default async function crawl(
             });
           }
 
-          await msgCallback(orderBookMsg);
+          msgCallback(orderBookMsg);
           break;
         }
         case 'trade': {
@@ -286,10 +286,7 @@ export default async function crawl(
             return tradeMsg;
           });
 
-          for (let i = 0; i < tradeMsges.length; i += 1) {
-            // eslint-disable-next-line no-await-in-loop
-            await msgCallback(tradeMsges[i]);
-          }
+          tradeMsges.forEach((x) => msgCallback(x));
           break;
         }
         default:

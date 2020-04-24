@@ -152,7 +152,8 @@ export default async function crawl(
             side: rawTradeMsg.data.type === 1,
             trade_id: rawTradeMsg.data.id.toString(),
           };
-          await msgCallback(tradeMsg);
+
+          msgCallback(tradeMsg);
           break;
         }
         default:

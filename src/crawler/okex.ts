@@ -251,10 +251,7 @@ export default async function crawl(
             };
           });
 
-          for (let i = 0; i < tickerMsges.length; i += 1) {
-            // eslint-disable-next-line no-await-in-loop
-            await msgCallback(tickerMsges[i]);
-          }
+          tickerMsges.forEach((x) => msgCallback(x));
           break;
         }
         case 'Trade': {
@@ -294,10 +291,7 @@ export default async function crawl(
             };
           });
 
-          for (let i = 0; i < tradeMsges.length; i += 1) {
-            // eslint-disable-next-line no-await-in-loop
-            await msgCallback(tradeMsges[i]);
-          }
+          tradeMsges.forEach((x) => msgCallback(x));
           break;
         }
         default:

@@ -106,7 +106,8 @@ export default async function crawl(
             askPrice: parseFloat(rawBookTickerMsg.a),
             askQuantity: parseFloat(rawBookTickerMsg.A),
           };
-          await msgCallback(msg);
+
+          msgCallback(msg);
           break;
         }
         case 'depth': {
@@ -145,7 +146,8 @@ export default async function crawl(
           };
           msg.asks = rawOrderbookMsg.a.map((text: Array<string>) => parseOrder(text));
           msg.bids = rawOrderbookMsg.b.map((text: Array<string>) => parseOrder(text));
-          await msgCallback(msg);
+
+          msgCallback(msg);
           break;
         }
         case 'trade': {
@@ -177,7 +179,8 @@ export default async function crawl(
             side: rawTradeMsg.m === false,
             trade_id: rawTradeMsg.t.toString(),
           };
-          await msgCallback(msg);
+
+          msgCallback(msg);
           break;
         }
         case 'aggTrade': {
@@ -209,7 +212,8 @@ export default async function crawl(
             side: rawTradeMsg.m === false,
             trade_id: rawTradeMsg.a.toString(),
           };
-          await msgCallback(msg);
+
+          msgCallback(msg);
           break;
         }
         default:

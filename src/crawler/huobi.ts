@@ -266,7 +266,7 @@ export default async function crawl(
               trade_id: (marketType === 'Spot' ? x.tradeId : x.id).toString(),
             }));
 
-            tradeMsges.forEach(async (tradeMsg) => msgCallback(tradeMsg));
+            tradeMsges.forEach((tradeMsg) => msgCallback(tradeMsg));
             break;
           }
           default:

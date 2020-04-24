@@ -113,7 +113,8 @@ export default async function crawl(
               rawOrderBookMsg.data.bids.forEach((text) => {
                 msg.bids.push(parseOrder(text));
               });
-              await msgCallback(msg);
+
+              msgCallback(msg);
               break;
             }
             case 'latest': {
@@ -146,7 +147,7 @@ export default async function crawl(
                 };
               });
 
-              await Promise.all(tradeMsges.map((x) => msgCallback(x)));
+              tradeMsges.forEach((x) => msgCallback(x));
               break;
             }
             default: {

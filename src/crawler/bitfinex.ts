@@ -118,10 +118,10 @@ function connect(
           assert.ok(trades instanceof PublicTrade);
           if (trades.length) {
             for (let i = 0; i < trades.length; i += 1) {
-              await msgCallback(parse(trades[i])); // eslint-disable-line no-await-in-loop
+              msgCallback(parse(trades[i]));
             }
           } else {
-            await msgCallback(parse(trades));
+            msgCallback(parse(trades));
           }
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -129,10 +129,10 @@ function connect(
           assert.ok(trades instanceof PublicTrade);
           if (trades.length) {
             for (let i = 0; i < trades.length; i += 1) {
-              await msgCallback(parse(trades[i])); // eslint-disable-line no-await-in-loop
+              msgCallback(parse(trades[i]));
             }
           } else {
-            await msgCallback(parse(trades));
+            msgCallback(parse(trades));
           }
         });
         break;
@@ -203,7 +203,8 @@ function connect(
             base_volume_24h: ticker.volume,
             quote_volume_24h: 0,
           };
-          await msgCallback(tickerMsg);
+
+          msgCallback(tickerMsg);
         });
         break;
       }
@@ -235,5 +236,5 @@ export default async function crawl(
 
   const wsClients = groups.map((g) => connect(marketType, markets, msgCallback, g));
 
-  await Promise.all(wsClients.map((ws) => ws.open()));
+  wsClients.forEach((ws) => ws.open());
 }

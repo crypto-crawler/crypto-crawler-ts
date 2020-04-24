@@ -173,7 +173,8 @@ export default async function crawl(
           case 'Trade': {
             const rawTradeMsgArray = arr[1] as string[][];
             assert.equal(rawTradeMsgArray[0].length, 6);
-            rawTradeMsgArray.forEach(async (rawTradeMsg) => {
+
+            rawTradeMsgArray.forEach((rawTradeMsg) => {
               assert.equal(rawTradeMsg.length, 6);
               const msg: TradeMsg = {
                 exchange: EXCHANGE_NAME,
@@ -189,7 +190,8 @@ export default async function crawl(
                 side: rawTradeMsg[2] === 's', // s, b
                 trade_id: '',
               };
-              await msgCallback(msg);
+
+              msgCallback(msg);
             });
             break;
           }

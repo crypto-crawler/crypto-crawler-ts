@@ -96,7 +96,7 @@ export default async function crawl(
               msg.asks = rawMsg.asks.map((text) => parseOrder(text));
               msg.bids = rawMsg.bids.map((text) => parseOrder(text));
 
-              await msgCallback(msg);
+              msgCallback(msg);
               break;
             }
             case 'Trade': {
@@ -125,7 +125,8 @@ export default async function crawl(
                 side: rawMsg.bidAsk === 'A',
                 trade_id: rawMsg.tradeId,
               };
-              await msgCallback(msg);
+
+              msgCallback(msg);
               break;
             }
             default:
