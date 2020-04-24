@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import WebSocket from 'ws';
 import { ChannelType } from '../pojo/channel_type';
-import { OrderBookMsg, OrderItem } from '../pojo/msg';
+import { OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { debug, getChannels, initBeforeCrawl } from './util';
 
@@ -21,6 +21,8 @@ function getChannel(
   switch (channeltype) {
     case 'OrderBook':
       return [`depth.${market.id}:${market.precision.price}`];
+    case 'Trade':
+      return [`latest.${market.id}`];
     default:
       throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
@@ -70,51 +72,87 @@ export default async function crawl(
           break;
         }
         case 'push': {
-          if (rawMsg.channel.startsWith('depth.')) {
-            const rawOrderBookMsg = rawMsg as {
-              type: string;
-              channel: string;
-              data: { asks: string[]; bids: string[]; full: number };
-            };
-            const rawPair = rawOrderBookMsg.channel.substring(
-              'depth.'.length,
-              rawOrderBookMsg.channel.length - 2,
-            );
-            const market = marketMap.get(rawPair)!;
-            assert.equal(market.exchange, EXCHANGE_NAME);
+          const [channel, rawPair] = rawMsg.channel.split(':')[0].split('.');
+          const market = marketMap.get(rawPair)!;
+          assert.equal(market.exchange, EXCHANGE_NAME);
 
-            const msg: OrderBookMsg = {
-              exchange: EXCHANGE_NAME,
-              marketType: 'Spot',
-              pair: market.pair,
-              rawPair,
-              channel: rawOrderBookMsg.channel,
-              channelType: 'OrderBook',
-              timestamp: new Date().getTime(),
-              raw: rawMsg,
-              asks: [],
-              bids: [],
-              full: rawOrderBookMsg.data.full === 1,
-            };
-            const parseOrder = (text: string): OrderItem => {
-              const arr = text.split(':');
-              assert.equal(arr.length, 3);
-              const orderItem: OrderItem = {
-                price: parseFloat(arr[0]),
-                quantity: parseFloat(arr[1]),
-                cost: parseFloat(arr[2]),
+          switch (channel) {
+            case 'depth': {
+              const rawOrderBookMsg = rawMsg as {
+                type: string;
+                channel: string;
+                data: { asks: string[]; bids: string[]; full: number };
               };
-              return orderItem;
-            };
-            rawOrderBookMsg.data.asks.reverse().forEach((text) => {
-              msg.asks.push(parseOrder(text));
-            });
-            rawOrderBookMsg.data.bids.forEach((text) => {
-              msg.bids.push(parseOrder(text));
-            });
-            await msgCallback(msg);
-          } else {
-            debug(rawMsg);
+
+              const msg: OrderBookMsg = {
+                exchange: EXCHANGE_NAME,
+                marketType: 'Spot',
+                pair: market.pair,
+                rawPair,
+                channel: rawOrderBookMsg.channel,
+                channelType: 'OrderBook',
+                timestamp: new Date().getTime(),
+                raw: rawMsg,
+                asks: [],
+                bids: [],
+                full: rawOrderBookMsg.data.full === 1,
+              };
+              const parseOrder = (text: string): OrderItem => {
+                const arr = text.split(':');
+                assert.equal(arr.length, 3);
+                const orderItem: OrderItem = {
+                  price: parseFloat(arr[0]),
+                  quantity: parseFloat(arr[1]),
+                  cost: parseFloat(arr[2]),
+                };
+                return orderItem;
+              };
+              rawOrderBookMsg.data.asks.reverse().forEach((text) => {
+                msg.asks.push(parseOrder(text));
+              });
+              rawOrderBookMsg.data.bids.forEach((text) => {
+                msg.bids.push(parseOrder(text));
+              });
+              await msgCallback(msg);
+              break;
+            }
+            case 'latest': {
+              const rawTradeMsges = rawMsg as {
+                type: string;
+                channel: string;
+                data: readonly {
+                  id: number;
+                  price: number;
+                  amount: number;
+                  volume: number;
+                  time: number;
+                  active_direction: number;
+                }[];
+              };
+              const tradeMsges: TradeMsg[] = rawTradeMsges.data.map((x) => {
+                return {
+                  exchange: EXCHANGE_NAME,
+                  marketType,
+                  pair: market.pair,
+                  rawPair,
+                  channel: rawMsg.channel,
+                  channelType: 'Trade',
+                  timestamp: x.time * 1000,
+                  raw: x,
+                  price: x.price,
+                  quantity: x.amount,
+                  side: x.active_direction === 2,
+                  trade_id: x.id.toString(),
+                };
+              });
+
+              await Promise.all(tradeMsges.map((x) => msgCallback(x)));
+              break;
+            }
+            default: {
+              debug(rawMsg);
+              throw new Error(`Unknown channel ${channel}`);
+            }
           }
           break;
         }
