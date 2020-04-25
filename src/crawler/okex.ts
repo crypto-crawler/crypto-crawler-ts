@@ -5,7 +5,6 @@ import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import {
-  calcQuantity,
   connect,
   convertFullOrderBookMsgToBboMsg,
   debug,
@@ -79,6 +78,23 @@ function getChannelType(channel: string): ChannelType {
       throw Error(`Unknown channel: ${channel}`);
   }
   return result;
+}
+
+function calcQuantity(market: Market, size: number, price: number): number {
+  if (market.type === 'Spot') {
+    return size;
+  }
+  assert.ok(Number.isInteger(size));
+
+  if (market.quote === 'USDT') {
+    // see https://www.okex.com/academy/zh/i-usdt-margin-delivery-contract-introduction-cn
+    return size * parseFloat(market.info.contract_val);
+  }
+
+  assert.equal(market.quote, 'USD');
+
+  const cost = market.base === 'BTC' ? size * 100 : size * 10;
+  return cost / price;
 }
 
 export default async function crawl(
