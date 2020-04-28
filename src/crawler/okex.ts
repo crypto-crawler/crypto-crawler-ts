@@ -18,6 +18,21 @@ const EXCHANGE_NAME = 'OKEx';
 
 const WEBSOCKET_ENDPOINT = 'wss://real.okex.com:8443/ws/v3';
 
+const PERIOD_NAMES: { [key: string]: string } = {
+  '60': '1m',
+  '180': '3m',
+  '300': '5m',
+  '900': '15m',
+  '1800': '30m',
+  '3600': '1H',
+  '7200': '2H',
+  '14400': '4H',
+  '21600': '6H',
+  '43200': '12H',
+  '86400': '1D',
+  '604800': '1W',
+};
+
 function getChannel(
   marketType: MarketType,
   channeltype: ChannelType,
@@ -43,7 +58,7 @@ function getChannel(
       case 'BBO':
         return [`${marketType.toLowerCase()}/depth5:${rawPair}`];
       case 'Kline':
-        return [60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 604800].map(
+        return Object.keys(PERIOD_NAMES).map(
           (period) => `${marketType.toLowerCase()}/candle${period}s:${rawPair}`,
         );
       case 'OrderBook':
@@ -213,7 +228,7 @@ export default async function crawl(
               low: parseFloat(low),
               close: parseFloat(close),
               volume: currency_volume ? parseFloat(currency_volume) : parseFloat(volume),
-              period: parseInt(rawKlineMsg.table.match(/(\d+)/)![0], 10),
+              period: PERIOD_NAMES[parseInt(rawKlineMsg.table.match(/(\d+)/)![0], 10)],
             };
 
             msgCallback(klineMsg);

@@ -22,17 +22,17 @@ const contractTypes: { [key: string]: string } = {
   quarter: 'CQ',
 };
 
-const periodMap: { [key: string]: number } = {
-  '1min': 60,
-  '5min': 300,
-  '15min': 900,
-  '30min': 1800,
-  '60min': 3600,
-  '4hour': 14400,
-  '1day': 86400,
-  '1week': 604800,
-  '1mon': 2592000,
-  '1year': 31536000,
+const PERIOD_NAMES: { [key: string]: string } = {
+  '1min': '1m',
+  '5min': '5m',
+  '15min': '15m',
+  '30min': '30m',
+  '60min': '1H',
+  '4hour': '4H',
+  '1day': '1D',
+  '1week': '1W',
+  '1mon': '1M',
+  '1year': '1Y',
 };
 
 function getChannel(
@@ -64,18 +64,7 @@ function getChannel(
       case 'BBO':
         return [marketType === 'Spot' ? `market.${rawPair}.bbo` : `market.${rawPair}.depth.step6`];
       case 'Kline':
-        return [
-          '1min',
-          '5min',
-          '15min',
-          '30min',
-          '60min',
-          '4hour',
-          '1day',
-          '1mon',
-          '1week',
-          '1year',
-        ].map((period) => `market.${rawPair}.kline.${period}`);
+        return Object.keys(PERIOD_NAMES).map((period) => `market.${rawPair}.kline.${period}`);
       case 'OrderBook':
         return [`market.${rawPair}.depth.step0`];
       case 'Trade':
@@ -258,7 +247,7 @@ export default async function crawl(
                 close: rawKlineMsg.close,
                 volume: rawKlineMsg.amount,
                 quoteVolume: rawKlineMsg.vol,
-                period: periodMap[rawMsg.ch.split('.')[3]],
+                period: PERIOD_NAMES[rawMsg.ch.split('.')[3]],
               };
 
               msgCallback(klineMsg);
@@ -290,7 +279,7 @@ export default async function crawl(
                 close: rawKlineMsg.close,
                 volume: rawKlineMsg.amount,
                 quoteVolume: rawKlineMsg.vol * (market.base === 'BTC' ? 100 : 10),
-                period: 60, // TODO: calculate from ch
+                period: PERIOD_NAMES[rawMsg.ch.split('.')[3]],
               };
 
               msgCallback(klineMsg);

@@ -196,7 +196,7 @@ export default async function crawl(
             close: parseFloat(rawKlineMsg.k.c),
             volume: parseFloat(rawKlineMsg.k.v),
             quoteVolume: parseFloat(rawKlineMsg.k.q),
-            period: 60, // TODO: calculate from ch
+            period: '1m', // TODO: calculate from ch
           };
 
           msgCallback(klineMsg);
