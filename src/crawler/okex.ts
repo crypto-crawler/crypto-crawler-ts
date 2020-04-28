@@ -37,19 +37,21 @@ function getChannel(
     );
   }
 
-  const result: string[] = marketsFiltered.map((market) => {
+  const result: string[] = marketsFiltered.flatMap((market) => {
     const rawPair = market.id;
     switch (channeltype) {
       case 'BBO':
-        return `${marketType.toLowerCase()}/depth5:${rawPair}`;
+        return [`${marketType.toLowerCase()}/depth5:${rawPair}`];
       case 'Kline':
-        return `${marketType.toLowerCase()}/candle60s:${rawPair}`;
+        return [60, 180, 300, 900, 1800, 3600, 7200, 14400, 21600, 43200, 86400, 604800].map(
+          (period) => `${marketType.toLowerCase()}/candle${period}s:${rawPair}`,
+        );
       case 'OrderBook':
-        return `${marketType.toLowerCase()}/optimized_depth:${rawPair}`; // optimized_depth, depth, depth_l2_tbt
+        return [`${marketType.toLowerCase()}/optimized_depth:${rawPair}`]; // optimized_depth, depth, depth_l2_tbt
       case 'Ticker':
-        return `${marketType.toLowerCase()}/ticker:${rawPair}`;
+        return [`${marketType.toLowerCase()}/ticker:${rawPair}`];
       case 'Trade':
-        return `${marketType.toLowerCase()}/trade:${rawPair}`;
+        return [`${marketType.toLowerCase()}/trade:${rawPair}`];
       default:
         throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
     }
@@ -61,27 +63,25 @@ function getChannel(
 function getChannelType(channel: string): ChannelType {
   assert.ok(channel.includes('/'));
   const channelName = channel.split('/')[1];
-  let result: ChannelType;
+
+  if (channelName.startsWith('candle')) return 'Kline';
+
   switch (channelName) {
-    case 'candle60s':
-      return 'Kline';
+    // case 'candle60s':
+    //   return 'Kline';
     case 'depth5':
       return 'BBO';
     case 'depth_l2_tbt':
     case 'depth':
     case 'optimized_depth':
-      result = 'OrderBook';
-      break;
+      return 'OrderBook';
     case 'ticker':
-      result = 'Ticker';
-      break;
+      return 'Ticker';
     case 'trade':
-      result = 'Trade';
-      break;
+      return 'Trade';
     default:
       throw Error(`Unknown channel: ${channel}`);
   }
-  return result;
 }
 
 function calcQuantity(market: Market, size: number, price: number): number {
@@ -111,7 +111,7 @@ export default async function crawl(
 
   const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
-  if (marketType === 'Spot') {
+  if ((marketType === 'Spot' || marketType === 'Swap') && !channelTypes.includes('Kline')) {
     assert.equal(channels.length, channelTypes.length * pairs.length);
   }
 
