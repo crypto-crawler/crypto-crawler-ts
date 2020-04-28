@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
-import { OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
+import { KlineMsg, OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import {
   connect,
@@ -42,6 +42,8 @@ function getChannel(
     switch (channeltype) {
       case 'BBO':
         return `${marketType.toLowerCase()}/depth5:${rawPair}`;
+      case 'Kline':
+        return `${marketType.toLowerCase()}/candle60s:${rawPair}`;
       case 'OrderBook':
         return `${marketType.toLowerCase()}/optimized_depth:${rawPair}`; // optimized_depth, depth, depth_l2_tbt
       case 'Ticker':
@@ -61,6 +63,8 @@ function getChannelType(channel: string): ChannelType {
   const channelName = channel.split('/')[1];
   let result: ChannelType;
   switch (channelName) {
+    case 'candle60s':
+      return 'Kline';
     case 'depth5':
       return 'BBO';
     case 'depth_l2_tbt':
@@ -176,6 +180,44 @@ export default async function crawl(
 
           const bboMsg = convertFullOrderBookMsgToBboMsg(orderBookMsg);
           msgCallback(bboMsg);
+          break;
+        }
+        case 'Kline': {
+          const rawKlineMsg = rawMsg as {
+            table: string;
+            data: [
+              {
+                candle: string[];
+                instrument_id: string;
+              },
+            ];
+          };
+
+          rawKlineMsg.data.forEach((x) => {
+            assert.ok(x.candle.length === 6 || x.candle.length === 7);
+            const [timestamp, open, high, low, close, volume, currency_volume] = x.candle;
+
+            const market = marketMap.get(x.instrument_id)!;
+
+            const klineMsg: KlineMsg = {
+              exchange: EXCHANGE_NAME,
+              marketType,
+              pair: market.pair,
+              rawPair: x.instrument_id,
+              channel: rawKlineMsg.table,
+              channelType: 'Kline',
+              timestamp: new Date(timestamp).getTime(),
+              raw: x,
+              open: parseFloat(open),
+              high: parseFloat(high),
+              low: parseFloat(low),
+              close: parseFloat(close),
+              volume: currency_volume ? parseFloat(currency_volume) : parseFloat(volume), // calcQuantity(market, parseFloat(volume), parseFloat(close))
+            };
+
+            msgCallback(klineMsg);
+          });
+
           break;
         }
         case 'OrderBook': {

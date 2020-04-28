@@ -56,3 +56,12 @@ export interface BboMsg extends Msg {
   askPrice: number;
   askQuantity: number;
 }
+
+export interface KlineMsg extends Msg {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number; // base volume
+  quoteVolume?: number; // quote volume
+}
