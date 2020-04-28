@@ -63,5 +63,6 @@ export interface KlineMsg extends Msg {
   low: number;
   close: number;
   volume: number; // base volume
+  period: number; // in seconds, for example, 60 means 1 minute kline
   quoteVolume?: number; // quote volume
 }

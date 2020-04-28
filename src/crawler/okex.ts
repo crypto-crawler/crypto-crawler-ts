@@ -212,7 +212,8 @@ export default async function crawl(
               high: parseFloat(high),
               low: parseFloat(low),
               close: parseFloat(close),
-              volume: currency_volume ? parseFloat(currency_volume) : parseFloat(volume), // calcQuantity(market, parseFloat(volume), parseFloat(close))
+              volume: currency_volume ? parseFloat(currency_volume) : parseFloat(volume),
+              period: parseInt(rawKlineMsg.table.match(/(\d+)/)![0], 10),
             };
 
             msgCallback(klineMsg);
