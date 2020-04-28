@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
-import { BboMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
+import { BboMsg, KlineMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { calcQuantity, connect, debug, getChannels, initBeforeCrawl } from './util';
 
@@ -50,6 +50,8 @@ function getChannel(
     switch (channeltype) {
       case 'BBO':
         return marketType === 'Spot' ? `market.${rawPair}.bbo` : `market.${rawPair}.depth.step6`;
+      case 'Kline':
+        return `market.${rawPair}.kline.1min`;
       case 'OrderBook':
         return `market.${rawPair}.depth.step0`;
       case 'Trade':
@@ -71,6 +73,9 @@ function getChannelType(channel: string): ChannelType {
       break;
     case 'depth':
       result = channel.endsWith('step0') ? 'OrderBook' : 'BBO';
+      break;
+    case 'kline':
+      result = 'Kline';
       break;
     case 'trade':
       result = 'Trade';
@@ -195,6 +200,77 @@ export default async function crawl(
               msgCallback(bboMsg);
             }
 
+            break;
+          }
+          case 'Kline': {
+            const rawPair = rawMsg.ch.split('.')[1];
+            const market =
+              marketType === 'Futures' ? marketMapFutures.get(rawPair)! : marketMap.get(rawPair)!;
+
+            if (marketType === 'Spot') {
+              const rawKlineMsg = rawMsg.tick as {
+                id: number;
+                amount: number;
+                count: number;
+                open: number;
+                close: number;
+                low: number;
+                high: number;
+                vol: number;
+              };
+
+              const klineMsg: KlineMsg = {
+                exchange: EXCHANGE_NAME,
+                marketType,
+                pair: market.pair,
+                rawPair: market.id,
+                channel: rawMsg.ch,
+                channelType,
+                timestamp: rawKlineMsg.id * 1000,
+                raw: rawKlineMsg,
+                open: rawKlineMsg.open,
+                high: rawKlineMsg.high,
+                low: rawKlineMsg.low,
+                close: rawKlineMsg.close,
+                volume: rawKlineMsg.amount,
+                quoteVolume: rawKlineMsg.vol,
+                period: 60, // TODO: calculate from ch
+              };
+
+              msgCallback(klineMsg);
+            } else {
+              const rawKlineMsg = rawMsg.tick as {
+                id: number;
+                mrid: number;
+                vol: number;
+                count: number;
+                open: number;
+                close: number;
+                low: number;
+                high: number;
+                amount: number;
+              };
+
+              const klineMsg: KlineMsg = {
+                exchange: EXCHANGE_NAME,
+                marketType,
+                pair: market.pair,
+                rawPair: market.id,
+                channel: rawMsg.ch,
+                channelType,
+                timestamp: rawKlineMsg.id * 1000,
+                raw: rawKlineMsg,
+                open: rawKlineMsg.open,
+                high: rawKlineMsg.high,
+                low: rawKlineMsg.low,
+                close: rawKlineMsg.close,
+                volume: rawKlineMsg.amount,
+                quoteVolume: rawKlineMsg.vol * (market.base === 'BTC' ? 100 : 10),
+                period: 60, // TODO: calculate from ch
+              };
+
+              msgCallback(klineMsg);
+            }
             break;
           }
           case 'OrderBook': {
