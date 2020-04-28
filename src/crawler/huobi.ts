@@ -22,6 +22,19 @@ const contractTypes: { [key: string]: string } = {
   quarter: 'CQ',
 };
 
+const periodMap: { [key: string]: number } = {
+  '1min': 60,
+  '5min': 300,
+  '15min': 900,
+  '30min': 1800,
+  '60min': 3600,
+  '4hour': 14400,
+  '1day': 86400,
+  '1week': 604800,
+  '1mon': 2592000,
+  '1year': 31536000,
+};
+
 function getChannel(
   marketType: MarketType,
   channeltype: ChannelType,
@@ -41,7 +54,7 @@ function getChannel(
     );
   }
 
-  const result: string[] = marketsFiltered.map((market) => {
+  const result: string[] = marketsFiltered.flatMap((market) => {
     assert.equal(market.exchange, EXCHANGE_NAME);
     const rawPair =
       market.type === 'Futures'
@@ -49,13 +62,24 @@ function getChannel(
         : market.id;
     switch (channeltype) {
       case 'BBO':
-        return marketType === 'Spot' ? `market.${rawPair}.bbo` : `market.${rawPair}.depth.step6`;
+        return [marketType === 'Spot' ? `market.${rawPair}.bbo` : `market.${rawPair}.depth.step6`];
       case 'Kline':
-        return `market.${rawPair}.kline.1min`;
+        return [
+          '1min',
+          '5min',
+          '15min',
+          '30min',
+          '60min',
+          '4hour',
+          '1day',
+          '1mon',
+          '1week',
+          '1year',
+        ].map((period) => `market.${rawPair}.kline.${period}`);
       case 'OrderBook':
-        return `market.${rawPair}.depth.step0`;
+        return [`market.${rawPair}.depth.step0`];
       case 'Trade':
-        return `market.${rawPair}.trade.detail`;
+        return [`market.${rawPair}.trade.detail`];
       default:
         throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
     }
@@ -96,7 +120,7 @@ export default async function crawl(
 
   const channels = getChannels(marketType, channelTypes, pairs, markets, getChannel);
   assert.ok(channels.length > 0);
-  if (marketType === 'Spot' || marketType === 'Swap') {
+  if ((marketType === 'Spot' || marketType === 'Swap') && !channelTypes.includes('Kline')) {
     assert.equal(channels.length, channelTypes.length * pairs.length);
   }
 
@@ -234,7 +258,7 @@ export default async function crawl(
                 close: rawKlineMsg.close,
                 volume: rawKlineMsg.amount,
                 quoteVolume: rawKlineMsg.vol,
-                period: 60, // TODO: calculate from ch
+                period: periodMap[rawMsg.ch.split('.')[3]],
               };
 
               msgCallback(klineMsg);
