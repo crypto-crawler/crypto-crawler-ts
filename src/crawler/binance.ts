@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
-import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { BboMsg, KlineMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { connect, debug, getChannels, initBeforeCrawl } from './util';
 
@@ -26,6 +26,8 @@ function getChannel(
   switch (channeltype) {
     case 'BBO':
       return [`${rawPair}@bookTicker`];
+    case 'Kline':
+      return [`${rawPair}@kline_1m`];
     case 'OrderBook':
       return [`${rawPair}@depth`];
     case 'Trade':
@@ -45,6 +47,9 @@ function getChannelType(channel: string): ChannelType {
       break;
     case 'depth':
       result = 'OrderBook';
+      break;
+    case 'kline_1m':
+      result = 'Kline';
       break;
     case 'trade':
       result = 'Trade';
@@ -148,6 +153,53 @@ export default async function crawl(
           msg.bids = rawOrderbookMsg.b.map((text: Array<string>) => parseOrder(text));
 
           msgCallback(msg);
+          break;
+        }
+        case 'kline_1m': {
+          const rawKlineMsg = rawMsg.data as {
+            e: string; // Event type
+            E: number; // Event time
+            s: string; // Symbol
+            k: {
+              t: number; // Kline start time
+              T: number; // Kline close time
+              s: string; // Symbol
+              i: string; // Interval
+              f: number; // First trade ID
+              L: number; // Last trade ID
+              o: string; // Open price
+              c: string; // Close price
+              h: string; // High price
+              l: string; // Low price
+              v: string; // Base asset volume
+              n: number; // Number of trades
+              x: boolean; // Is this kline closed?
+              q: string; // Quote asset volume
+              V: string; // Taker buy base asset volume
+              Q: string; // Taker buy quote asset volume
+              B: string; // Ignore
+            };
+          };
+
+          const klineMsg: KlineMsg = {
+            exchange: EXCHANGE_NAME,
+            marketType,
+            pair: marketMap.get(rawKlineMsg.s)!.pair,
+            rawPair: rawKlineMsg.s,
+            channel: rawMsg.stream,
+            channelType,
+            timestamp: rawKlineMsg.k.t,
+            raw: rawKlineMsg,
+            open: parseFloat(rawKlineMsg.k.o),
+            high: parseFloat(rawKlineMsg.k.h),
+            low: parseFloat(rawKlineMsg.k.l),
+            close: parseFloat(rawKlineMsg.k.c),
+            volume: parseFloat(rawKlineMsg.k.v),
+            quoteVolume: parseFloat(rawKlineMsg.k.q),
+            period: 60, // TODO: calculate from ch
+          };
+
+          msgCallback(klineMsg);
           break;
         }
         case 'trade': {
