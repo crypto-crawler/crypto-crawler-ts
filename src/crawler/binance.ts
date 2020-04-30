@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
-import { BboMsg, KlineMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { BboMsg, KlineMsg, OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { connect, debug, getChannels, initBeforeCrawl } from './util';
 
@@ -48,6 +48,8 @@ function getChannel(
       return Object.keys(PERIOD_NAMES).map((x) => `${rawPair}@kline_${x}`);
     case 'OrderBook':
       return [`${rawPair}@depth`];
+    case 'Ticker':
+      return [`${rawPair}@ticker`];
     case 'Trade':
       return [`${rawPair}@aggTrade`]; // trade or aggTrade
     default:
@@ -61,27 +63,22 @@ function getChannelType(channel: string): ChannelType {
 
   if (suffix.startsWith('kline_')) return 'Kline';
 
-  let result: ChannelType;
   switch (suffix) {
     case 'bookTicker':
-      result = 'BBO';
-      break;
+      return 'BBO';
     case 'depth':
-      result = 'OrderBook';
-      break;
+      return 'OrderBook';
     // case 'kline_1m':
-    //   result = 'Kline';
-    //   break;
+    //   return 'Kline';
+    case 'ticker':
+      return 'Ticker';
     case 'trade':
-      result = 'Trade';
-      break;
+      return 'Trade';
     case 'aggTrade':
-      result = 'Trade';
-      break;
+      return 'Trade';
     default:
       throw Error(`Unknown channel: ${channel}`);
   }
-  return result;
 }
 
 export default async function crawl(
@@ -223,6 +220,58 @@ export default async function crawl(
           };
 
           msgCallback(klineMsg);
+          break;
+        }
+        case 'Ticker': {
+          const rawTickerMsg = rawMsg.data as {
+            e: string; // Event type
+            E: number; // Event time
+            s: string; // Symbol
+            p: string; // Price change
+            P: string; // Price change percent
+            w: string; // Weighted average price
+            x: string; // First trade(F)-1 price (first trade before the 24hr rolling window)
+            c: string; // Last price
+            Q: string; // Last quantity
+            b: string; // Best bid price
+            B: string; // Best bid quantity
+            a: string; // Best ask price
+            A: string; // Best ask quantity
+            o: string; // Open price
+            h: string; // High price
+            l: string; // Low price
+            v: string; // Total traded base asset volume
+            q: string; // Total traded quote asset volume
+            O: number; // Statistics open time
+            C: number; // Statistics close time
+            F: number; // First trade ID
+            L: number; // Last trade Id
+            n: number; // Total number of trades
+          };
+
+          const tickerMsg: TickerMsg = {
+            exchange: EXCHANGE_NAME,
+            marketType,
+            pair: marketMap.get(rawTickerMsg.s)!.pair,
+            rawPair: rawTickerMsg.s,
+            channel: rawMsg.stream,
+            channelType,
+            timestamp: rawTickerMsg.E,
+            raw: rawTickerMsg,
+            last_price: parseFloat(rawTickerMsg.c),
+            last_quantity: parseFloat(rawTickerMsg.Q),
+            best_bid_price: parseFloat(rawTickerMsg.b), // TODO: Swap NaN
+            best_bid_quantity: parseFloat(rawTickerMsg.B),
+            best_ask_price: parseFloat(rawTickerMsg.a),
+            best_ask_quantity: parseFloat(rawTickerMsg.A),
+            open_price_24h: parseFloat(rawTickerMsg.o),
+            high_price_24h: parseFloat(rawTickerMsg.h),
+            low_price_24h: parseFloat(rawTickerMsg.l),
+            base_volume_24h: parseFloat(rawTickerMsg.v),
+            quote_volume_24h: parseFloat(rawTickerMsg.q),
+          };
+
+          msgCallback(tickerMsg);
           break;
         }
         case 'Trade': {

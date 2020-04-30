@@ -16,6 +16,7 @@ export interface Msg {
   raw: { [key: string]: any }; // the original message
 }
 
+// 24hr rolling window ticker
 export interface TickerMsg extends Msg {
   last_price: number;
   last_quantity: number;
