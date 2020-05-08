@@ -74,7 +74,7 @@ async function crawlOnePair(
           price: parseFloat(x.p),
           quantity: parseFloat(x.q),
           side: x.T === 2,
-          trade_id: '', // TODO: MXC does NOT have trade ID
+          trade_id: x.t.toString(), // use timestamp as trade_id
         }));
 
         tradeMsges.forEach((tradeMsg) => msgCallback(tradeMsg));

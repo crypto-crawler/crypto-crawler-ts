@@ -5,6 +5,8 @@ import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { connect, debug, getChannels, initBeforeCrawl } from './util';
 
+// doc: https://docs.kraken.com/websockets/
+
 const EXCHANGE_NAME = 'Kraken';
 const WEBSOCKET_ENDPOINT = 'wss://ws.kraken.com';
 
@@ -188,7 +190,7 @@ export default async function crawl(
                 price: parseFloat(rawTradeMsg[0]),
                 quantity: parseFloat(rawTradeMsg[1]),
                 side: rawTradeMsg[2] === 's', // s, b
-                trade_id: '',
+                trade_id: rawTradeMsg[2].replace('.', ''), // use timestamp as trade_id
               };
 
               msgCallback(msg);
