@@ -72,7 +72,7 @@ export default async function crawl(
       }
       if (data.event === 'bts:request_reconnect') {
         debug(data);
-        debug('Need to reconnect now');
+        debug('Need to reconnect now'); // TODO: reconnect
         return;
       }
       const channelType = getChannelType(data.channel);
