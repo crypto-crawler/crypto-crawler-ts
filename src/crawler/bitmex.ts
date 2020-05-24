@@ -1,9 +1,11 @@
 import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
+import { setTimeout } from 'timers';
+import WebSocket from 'ws';
 import { ChannelType } from '../pojo/channel_type';
 import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { connect, debug, getChannels, initBeforeCrawl } from './util';
+import { debug, getChannels, initBeforeCrawl } from './util';
 
 // doc https://www.bitmex.com/app/wsAPI
 
@@ -62,6 +64,72 @@ export function calcQuantity(market: Market, size: number, price: number): numbe
     return size;
   }
   return size;
+}
+
+// This function re-connects on close.
+export function connect(
+  url: string,
+  onMessage: (data: WebSocket.Data) => void,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  subscriptions?: readonly { [key: string]: any }[],
+): void {
+  const websocket = new WebSocket(url);
+
+  let pongTimeout: NodeJS.Timeout;
+
+  let timer: NodeJS.Timeout;
+
+  // see https://www.bitmex.com/app/wsAPI#Heartbeats
+  const restartTimer = (): void => {
+    // restart the timer
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      websocket.ping();
+
+      clearTimeout(pongTimeout);
+      pongTimeout = setTimeout(() => {
+        debug('pong latency more then 5 seconds, now re-connecting');
+        connect(url, onMessage, subscriptions);
+      }, 5000);
+    }, 5000);
+  };
+
+  restartTimer();
+
+  websocket.on('open', () => {
+    debug(`${websocket.url} connected`);
+
+    if (subscriptions !== undefined) {
+      subscriptions.forEach((x) => {
+        websocket.send(JSON.stringify(x));
+      });
+    }
+  });
+
+  websocket.on('pong', (data) => {
+    debug(data.toString('utf8').length);
+    clearTimeout(pongTimeout);
+
+    restartTimer();
+  });
+
+  websocket.on('message', (data) => {
+    restartTimer();
+
+    onMessage(data);
+  });
+
+  websocket.on('error', (error) => {
+    debug(JSON.stringify(error));
+    websocket.close();
+    // process.exit(1); // fail fast, pm2 will restart it
+  });
+  websocket.on('close', () => {
+    debug(`${websocket.url} disconnected, now re-connecting`);
+    setTimeout(() => {
+      connect(url, onMessage, subscriptions);
+    }, 1000);
+  });
 }
 
 export default async function crawl(
@@ -264,7 +332,7 @@ export default async function crawl(
             } else if (market.type === 'Futures') {
               if (market.base === 'BTC') {
                 assert.equal(rawTradeMsg.size, rawTradeMsg.foreignNotional);
-              } else {
+              } else if (market.id !== 'ETHUSDM20') {
                 assert.equal(rawTradeMsg.homeNotional, rawTradeMsg.size);
               }
             }
