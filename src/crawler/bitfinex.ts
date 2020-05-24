@@ -3,7 +3,7 @@ import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
 import { OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
-import { debug, initBeforeCrawl } from './util';
+import { chunkArray, debug, initBeforeCrawl } from './util';
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 const { WSv2 } = require('bitfinex-api-node');
@@ -24,26 +24,6 @@ function getChannel(channeltype: ChannelType): string {
     default:
       throw Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
-}
-
-/**
- * Returns an array with arrays of the given size.
- *
- * @param myArray {Array} array to split
- * @param chunk_size {int} Size of every group
- */
-function chunkArray<T>(myArray: T[], chunk_size: number): T[][] {
-  let index = 0;
-  const arrayLength = myArray.length;
-  const tempArray = [];
-
-  for (index = 0; index < arrayLength; index += chunk_size) {
-    const myChunk = myArray.slice(index, index + chunk_size);
-    // Do something if you want with the group
-    tempArray.push(myChunk);
-  }
-
-  return tempArray;
 }
 
 function connect(

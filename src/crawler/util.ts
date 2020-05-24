@@ -162,3 +162,23 @@ export function calcQuantity(market: Market, amount: number, price: number): num
   const cost = market.base === 'BTC' ? amount * 100 : amount * 10;
   return cost / price;
 }
+
+/**
+ * Split an array into chunks of the same size.
+ *
+ * @param myArray {Array} array to split
+ * @param chunk_size {int} Size of every group
+ */
+export function chunkArray<T>(myArray: readonly T[], chunk_size: number): T[][] {
+  let index = 0;
+  const arrayLength = myArray.length;
+  const tempArray = [];
+
+  for (index = 0; index < arrayLength; index += chunk_size) {
+    const myChunk = myArray.slice(index, index + chunk_size);
+    // Do something if you want with the group
+    tempArray.push(myChunk);
+  }
+
+  return tempArray;
+}
