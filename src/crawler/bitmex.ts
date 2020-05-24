@@ -3,7 +3,7 @@ import { Market, MarketType } from 'crypto-markets';
 import { setTimeout } from 'timers';
 import WebSocket from 'ws';
 import { ChannelType } from '../pojo/channel_type';
-import { BboMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
+import { BboMsg, KlineMsg, OrderBookMsg, OrderItem, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { debug, getChannels, initBeforeCrawl } from './util';
 
@@ -12,6 +12,13 @@ import { debug, getChannels, initBeforeCrawl } from './util';
 const EXCHANGE_NAME = 'BitMEX';
 
 const WEBSOCKET_ENDPOINT = 'wss://www.bitmex.com/realtime';
+
+const PERIOD_NAMES: { [key: string]: string } = {
+  '1m': '1m',
+  '5m': '5m',
+  '1h': '1H',
+  '1d': '1D',
+};
 
 function getChannel(
   marketType: MarketType,
@@ -25,20 +32,23 @@ function getChannel(
     `${EXCHANGE_NAME} ${marketType} market does NOT have ${pair}`,
   );
 
-  const channelTypeMap: { [key: string]: string } = {
-    BBO: 'quote',
-    OrderBook: 'orderBookL2_25',
-    Trade: 'trade',
+  const channelTypeMap: { [key: string]: string[] } = {
+    BBO: ['quote'],
+    OrderBook: ['orderBookL2_25'],
+    Trade: ['trade'],
+    Kline: ['tradeBin1m', 'tradeBin5m', 'tradeBin1h', 'tradeBin1d'],
   };
-  const channel = channelTypeMap[channeltype];
-  if (channel === undefined) {
+  const channels = channelTypeMap[channeltype];
+  if (channels === undefined) {
     throw new Error(`ChannelType ${channeltype} is not supported for ${EXCHANGE_NAME} yet`);
   }
 
-  return marketsFiltered.map((market) => `${channel}:${market.id}`);
+  return marketsFiltered.flatMap((market) => channels.map((channel) => `${channel}:${market.id}`));
 }
 
 function getChannelType(channel: string): ChannelType {
+  if (channel.startsWith('tradeBin')) return 'Kline';
+
   const channelTypeMap: { [key: string]: ChannelType } = {
     quote: 'BBO',
     orderBookL2_25: 'OrderBook',
@@ -355,6 +365,57 @@ export default async function crawl(
           });
 
           tradeMsges.forEach((x) => msgCallback(x));
+          break;
+        }
+        case 'tradeBin1m':
+        case 'tradeBin5m':
+        case 'tradeBin1h':
+        case 'tradeBin1d': {
+          const rawKlineMsg = obj as {
+            table: string;
+            action: 'partial' | 'insert';
+            data: ReadonlyArray<{
+              timestamp: string;
+              symbol: string;
+              open: number;
+              high: number;
+              low: number;
+              close: number;
+              trades: number;
+              volume: number;
+              vwap: number;
+              lastSize: number;
+              turnover: number;
+              homeNotional: number;
+              foreignNotional: number;
+            }>;
+          };
+          assert.ok(rawKlineMsg.action === 'partial' || rawKlineMsg.action === 'insert');
+
+          const klineMsges = rawKlineMsg.data.map((x) => {
+            const market = marketMap.get(x.symbol)!;
+
+            const klineMsg: KlineMsg = {
+              exchange: EXCHANGE_NAME,
+              marketType,
+              pair: market.pair,
+              rawPair: x.symbol,
+              channel,
+              channelType,
+              timestamp: new Date(x.timestamp).getTime(),
+              raw: x,
+              open: x.open,
+              high: x.high,
+              low: x.low,
+              close: x.close,
+              volume: x.homeNotional,
+              quoteVolume: x.foreignNotional,
+              period: PERIOD_NAMES[rawKlineMsg.table.substring('tradeBin'.length)],
+            };
+            return klineMsg;
+          });
+
+          klineMsges.forEach((x) => msgCallback(x));
           break;
         }
         default:
