@@ -368,3 +368,82 @@ export default async function crawl(
     channels.map((channel) => ({ sub: channel, id: 'crypto-crawler', zip: 1 })),
   );
 }
+
+export interface HB10IndexMsg {
+  exchange: string;
+  timestamp: number;
+  id: number;
+  channel: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  interval: string; // m, minute; H, hour; D, day; W, week; M, month; Y, year
+}
+
+// see https://www.huobi.com/zh-cn/markets/hb_index/
+export async function crawlHB10(
+  msgCallback = async (msg: HB10IndexMsg): Promise<void> => console.info(msg), // eslint-disable-line no-console
+): Promise<void> {
+  const channels = [
+    '1min',
+    '5min',
+    '15min',
+    '30min',
+    '60min',
+    '4hour',
+    '1day',
+    '1week',
+    '1mon',
+  ].map((x) => `market.huobi10.kline.${x}`);
+
+  connect(
+    'wss://api.huobiasia.vip/ws',
+    (data) => {
+      const raw = Pako.ungzip(data as pako.Data, { to: 'string' });
+      const obj = JSON.parse(raw);
+
+      if (!obj.tick) {
+        if (obj.status === 'ok') debug(obj);
+        else debug(obj);
+        return;
+      }
+      if (obj.ts && obj.ch && obj.tick) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const rawMsg = obj as {
+          ch: string;
+          ts: number;
+          tick: {
+            id: number;
+            open: number;
+            close: number;
+            low: number;
+            high: number;
+            amount: number;
+            vol: number;
+            count: number;
+          };
+        };
+
+        assert.equal(rawMsg.tick.amount, 0);
+        assert.equal(rawMsg.tick.vol, 0);
+        assert.equal(rawMsg.tick.count, 0);
+
+        const hb10IndexMsg: HB10IndexMsg = {
+          exchange: 'Huobi',
+          timestamp: rawMsg.ts,
+          id: rawMsg.tick.id,
+          channel: rawMsg.ch,
+          open: rawMsg.tick.open,
+          high: rawMsg.tick.high,
+          low: rawMsg.tick.low,
+          close: rawMsg.tick.close,
+          interval: PERIOD_NAMES[rawMsg.ch.split('.')[3]],
+        };
+
+        msgCallback(hb10IndexMsg);
+      }
+    },
+    channels.map((channel) => ({ sub: channel, id: 'crypto-crawler', zip: 1 })),
+  );
+}
