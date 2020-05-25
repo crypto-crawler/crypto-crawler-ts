@@ -1,5 +1,5 @@
 import { strict as assert } from 'assert';
-import { Market, MarketType } from 'crypto-markets';
+import fetchMarkets, { Market, MarketType } from 'crypto-markets';
 import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
 import {
@@ -411,6 +411,117 @@ export default async function crawl(
         }
         default:
           debug(`Unknown channel: ${obj.table}`);
+      }
+    },
+    [{ op: 'subscribe', args: channels }],
+  );
+}
+
+export interface IndexTickerMsg {
+  exchange: string;
+  pair: string;
+  channel: string;
+  last: number;
+  open_24h: number;
+  high_24h: number;
+  low_24h: number;
+  instrument_id: string;
+  timestamp: number;
+}
+
+export interface IndexKlineMsg {
+  exchange: string;
+  pair: string;
+  instrument_id: string;
+  channel: string;
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number; // base volume
+  interval: string; // m, minute; H, hour; D, day; W, week; M, month; Y, year
+}
+
+export async function crawlIndex(
+  tickerMsgCallback = async (msg: IndexTickerMsg): Promise<void> => console.info(msg), // eslint-disable-line no-console
+  klineMsgCallback = async (msg: IndexKlineMsg): Promise<void> => console.info(msg), // eslint-disable-line no-console
+): Promise<void> {
+  const swapMarkets = (await fetchMarkets('OKEx', 'Swap')).filter((m) => m.active);
+  const rawPairs = swapMarkets.map((m) => m.id.substring(0, m.id.length - '-SWAP'.length));
+
+  const channelsIndex = rawPairs.map((rawPair) => `index/ticker:${rawPair}`);
+  const channelsKline = rawPairs.flatMap((rawPair) =>
+    Object.keys(PERIOD_NAMES).map((interval) => `index/candle${interval}s:${rawPair}`),
+  );
+  const channels = channelsIndex.concat(channelsKline);
+
+  connect(
+    WEBSOCKET_ENDPOINT,
+    async (data) => {
+      const raw = Pako.inflateRaw(data as pako.Data, { to: 'string' });
+      const obj = JSON.parse(raw) as {
+        event?: string;
+        table: string;
+        data: Array<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+      };
+      if (obj.event === 'error') {
+        debug(obj);
+        process.exit(-1); // fail fast
+      } else if (obj.event === 'subscribe') {
+        debug(obj);
+        return;
+      }
+      if (!(obj.table && obj.data)) {
+        debug(obj);
+        return;
+      }
+
+      if (obj.table === 'index/ticker') {
+        const arr = obj.data as ReadonlyArray<{
+          last: string;
+          open_24h: string;
+          high_24h: string;
+          low_24h: string;
+          instrument_id: string;
+          timestamp: string;
+        }>;
+        const tickerMsges: IndexTickerMsg[] = arr.map((x) => ({
+          exchange: 'OKEx',
+          pair: x.instrument_id.replace('-', '_'),
+          channel: obj.table,
+          last: parseFloat(x.last),
+          open_24h: parseFloat(x.last),
+          high_24h: parseFloat(x.last),
+          low_24h: parseFloat(x.last),
+          instrument_id: x.instrument_id,
+          timestamp: new Date(x.timestamp).getTime(),
+        }));
+
+        tickerMsges.forEach((x) => tickerMsgCallback(x));
+      } else if (obj.table.startsWith('index/candle')) {
+        const arr = obj.data as ReadonlyArray<{
+          candle: ReadonlyArray<string>;
+          instrument_id: string;
+        }>;
+
+        const klineMsges: IndexKlineMsg[] = arr.map((x) => ({
+          exchange: 'OKEx',
+          pair: x.instrument_id.replace('-', '_'),
+          instrument_id: x.instrument_id,
+          channel: obj.table,
+          timestamp: new Date(x.candle[0]).getTime(),
+          open: parseFloat(x.candle[1]),
+          high: parseFloat(x.candle[2]),
+          low: parseFloat(x.candle[3]),
+          close: parseFloat(x.candle[4]),
+          volume: parseFloat(x.candle[5]),
+          interval: PERIOD_NAMES[parseInt(obj.table.match(/(\d+)/)![0], 10)],
+        }));
+
+        klineMsges.forEach((x) => klineMsgCallback(x));
+      } else {
+        debug(`Unknown table: ${obj.table}`);
       }
     },
     [{ op: 'subscribe', args: channels }],
