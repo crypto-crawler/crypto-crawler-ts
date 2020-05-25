@@ -444,10 +444,18 @@ export interface IndexKlineMsg {
 }
 
 export async function crawlIndex(
+  pairs: readonly string[],
   tickerMsgCallback = async (msg: IndexTickerMsg): Promise<void> => console.info(msg), // eslint-disable-line no-console
   klineMsgCallback = async (msg: IndexKlineMsg): Promise<void> => console.info(msg), // eslint-disable-line no-console
 ): Promise<void> {
-  const swapMarkets = (await fetchMarkets('OKEx', 'Swap')).filter((m) => m.active);
+  const swapMarkets = (await fetchMarkets('OKEx', 'Swap')).filter(
+    (m) => m.active && pairs.includes(m.pair),
+  );
+  assert.equal(
+    pairs.length,
+    swapMarkets.length,
+    `Some pairs in ${pairs.join(',')} are not in Swap market`,
+  );
   const rawPairs = swapMarkets.map((m) => m.id.substring(0, m.id.length - '-SWAP'.length));
 
   const channelsIndex = rawPairs.map((rawPair) => `index/ticker:${rawPair}`);
@@ -491,9 +499,9 @@ export async function crawlIndex(
           pair: x.instrument_id.replace('-', '_'),
           channel: obj.table,
           last: parseFloat(x.last),
-          open_24h: parseFloat(x.last),
-          high_24h: parseFloat(x.last),
-          low_24h: parseFloat(x.last),
+          open_24h: parseFloat(x.open_24h),
+          high_24h: parseFloat(x.high_24h),
+          low_24h: parseFloat(x.low_24h),
           instrument_id: x.instrument_id,
           timestamp: new Date(x.timestamp).getTime(),
         }));
