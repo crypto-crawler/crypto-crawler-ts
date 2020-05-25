@@ -2,7 +2,14 @@ import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
-import { KlineMsg, OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
+import {
+  FundingRateMsg,
+  KlineMsg,
+  OrderBookMsg,
+  OrderItem,
+  TickerMsg,
+  TradeMsg,
+} from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import {
   connect,
@@ -57,6 +64,9 @@ function getChannel(
     switch (channeltype) {
       case 'BBO':
         return [`${marketType.toLowerCase()}/depth5:${rawPair}`];
+      case 'FundingRate':
+        assert.equal(marketType, 'Swap');
+        return [`${marketType.toLowerCase()}/funding_rate:${rawPair}`];
       case 'Kline':
         return Object.keys(PERIOD_NAMES).map(
           (period) => `${marketType.toLowerCase()}/candle${period}s:${rawPair}`,
@@ -86,6 +96,8 @@ function getChannelType(channel: string): ChannelType {
     //   return 'Kline';
     case 'depth5':
       return 'BBO';
+    case 'funding_rate':
+      return 'FundingRate';
     case 'depth_l2_tbt':
     case 'depth':
     case 'optimized_depth':
@@ -148,6 +160,7 @@ export default async function crawl(
       }
       const rawMsg = obj as {
         table: string;
+        action?: string;
         data: Array<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
       };
 
@@ -156,14 +169,12 @@ export default async function crawl(
         case 'BBO': {
           const rawOrderBookMsg = rawMsg as {
             table: string;
-            data: [
-              {
-                instrument_id: string;
-                asks: Array<[string, string, number]>;
-                bids: Array<[string, string, number]>;
-                timestamp: string;
-              },
-            ];
+            data: ReadonlyArray<{
+              instrument_id: string;
+              asks: Array<[string, string, number]>;
+              bids: Array<[string, string, number]>;
+              timestamp: string;
+            }>;
           };
           assert.equal(rawOrderBookMsg.data.length, 1);
           const market = marketMap.get(rawOrderBookMsg.data[0].instrument_id)!;
@@ -197,15 +208,47 @@ export default async function crawl(
           msgCallback(bboMsg);
           break;
         }
+        case 'FundingRate': {
+          const rawFundingRateMsg = rawMsg as {
+            table: string;
+            data: ReadonlyArray<{
+              estimated_rate: string;
+              funding_rate: string;
+              funding_time: string;
+              instrument_id: string;
+              interest_rate: string;
+              settlement_time: string;
+            }>;
+          };
+
+          rawFundingRateMsg.data.forEach((x) => {
+            const market = marketMap.get(x.instrument_id)!;
+
+            const fundingRateMsg: FundingRateMsg = {
+              exchange: EXCHANGE_NAME,
+              marketType,
+              pair: market.pair,
+              rawPair: x.instrument_id,
+              channel: rawFundingRateMsg.table,
+              channelType,
+              timestamp: Date.now(),
+              raw: x,
+              fundingRate: parseFloat(x.funding_rate),
+              fundingTime: new Date(x.funding_time).getTime(),
+            };
+
+            msgCallback(fundingRateMsg);
+          });
+
+          break;
+        }
         case 'Kline': {
           const rawKlineMsg = rawMsg as {
             table: string;
-            data: [
-              {
-                candle: string[];
-                instrument_id: string;
-              },
-            ];
+            data: ReadonlyArray<{
+              candle: string[];
+              instrument_id: string;
+            }>;
           };
 
           rawKlineMsg.data.forEach((x) => {
@@ -220,7 +263,7 @@ export default async function crawl(
               pair: market.pair,
               rawPair: x.instrument_id,
               channel: rawKlineMsg.table,
-              channelType: 'Kline',
+              channelType,
               timestamp: new Date(timestamp).getTime(),
               raw: x,
               open: parseFloat(open),
@@ -240,15 +283,13 @@ export default async function crawl(
           const rawOrderBookMsg = rawMsg as {
             table: string;
             action: 'partial' | 'update';
-            data: [
-              {
-                instrument_id: string;
-                asks: Array<[string, string, number]>;
-                bids: Array<[string, string, number]>;
-                timestamp: string;
-                checksum: number;
-              },
-            ];
+            data: ReadonlyArray<{
+              instrument_id: string;
+              asks: Array<[string, string, number]>;
+              bids: Array<[string, string, number]>;
+              timestamp: string;
+              checksum: number;
+            }>;
           };
           assert.equal(rawOrderBookMsg.data.length, 1);
           const market = marketMap.get(rawOrderBookMsg.data[0].instrument_id)!;
@@ -284,7 +325,7 @@ export default async function crawl(
         case 'Ticker': {
           const rawTickerMsg = rawMsg as {
             table: string;
-            data: Array<{
+            data: ReadonlyArray<{
               instrument_id: string;
               last: string;
               last_qty: string;
@@ -331,7 +372,7 @@ export default async function crawl(
         case 'Trade': {
           const rawTradeMsg = rawMsg as {
             table: string;
-            data: Array<{
+            data: ReadonlyArray<{
               instrument_id: string;
               price: string;
               side: 'buy' | 'sell';
