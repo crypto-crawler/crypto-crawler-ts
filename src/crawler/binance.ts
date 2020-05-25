@@ -1,7 +1,15 @@
 import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import { ChannelType } from '../pojo/channel_type';
-import { BboMsg, KlineMsg, OrderBookMsg, OrderItem, TickerMsg, TradeMsg } from '../pojo/msg';
+import {
+  BboMsg,
+  FundingRateMsg,
+  KlineMsg,
+  OrderBookMsg,
+  OrderItem,
+  TickerMsg,
+  TradeMsg,
+} from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { connect, debug, getChannels, initBeforeCrawl } from './util';
 
@@ -44,6 +52,9 @@ function getChannel(
   switch (channeltype) {
     case 'BBO':
       return [`${rawPair}@bookTicker`];
+    case 'FundingRate':
+      assert.equal(marketType, 'Swap');
+      return [`${rawPair}@markPrice`];
     case 'Kline':
       return Object.keys(PERIOD_NAMES).map((x) => `${rawPair}@kline_${x}`);
     case 'OrderBook':
@@ -66,6 +77,8 @@ function getChannelType(channel: string): ChannelType {
   switch (suffix) {
     case 'bookTicker':
       return 'BBO';
+    case 'markPrice':
+      return 'FundingRate';
     case 'depth':
       return 'OrderBook';
     // case 'kline_1m':
@@ -133,6 +146,32 @@ export default async function crawl(
           };
 
           msgCallback(msg);
+          break;
+        }
+        case 'FundingRate': {
+          const rawFundingRateMsg = rawMsg.data as {
+            e: string;
+            E: number;
+            s: string;
+            p: string;
+            r: string;
+            T: number;
+          };
+          assert.equal(rawFundingRateMsg.e, 'markPriceUpdate');
+          const fundingRateMsg: FundingRateMsg = {
+            exchange: EXCHANGE_NAME,
+            marketType,
+            pair: marketMap.get(rawFundingRateMsg.s)!.pair,
+            rawPair: rawFundingRateMsg.s,
+            channel: rawMsg.stream,
+            channelType,
+            timestamp: rawFundingRateMsg.E,
+            raw: rawFundingRateMsg,
+            fundingRate: parseFloat(rawFundingRateMsg.r),
+            fundingTime: rawFundingRateMsg.T,
+          };
+
+          msgCallback(fundingRateMsg);
           break;
         }
         case 'OrderBook': {

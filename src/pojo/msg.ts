@@ -67,3 +67,8 @@ export interface KlineMsg extends Msg {
   period: string; // m, minute; H, hour; D, day; W, week; M, month; Y, year
   quoteVolume?: number; // quote volume
 }
+
+export interface FundingRateMsg extends Msg {
+  fundingRate: number;
+  fundingTime: number;
+}
