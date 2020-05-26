@@ -417,6 +417,8 @@ export default async function crawl(
   );
 }
 
+// *********************** Misc ***********************
+
 export interface IndexTickerMsg {
   exchange: string;
   pair: string;
