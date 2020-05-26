@@ -171,17 +171,17 @@ function connect(
             channelType,
             timestamp: Date.now(),
             raw: ticker.serialize(),
-            last_price: ticker.lastPrice,
             last_quantity: 0,
             best_bid_price: ticker.bid,
             best_bid_quantity: ticker.bidSize,
             best_ask_price: ticker.ask,
             best_ask_quantity: ticker.askSize,
-            open_price_24h: 0,
-            high_price_24h: ticker.high,
-            low_price_24h: ticker.low,
-            base_volume_24h: ticker.volume,
-            quote_volume_24h: 0,
+            open: 0,
+            high: ticker.high,
+            low: ticker.low,
+            close: ticker.lastPrice,
+            volume: ticker.volume,
+            quoteVolume: 0,
           };
 
           msgCallback(tickerMsg);

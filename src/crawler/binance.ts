@@ -297,17 +297,17 @@ export default async function crawl(
             channelType,
             timestamp: rawTickerMsg.E,
             raw: rawTickerMsg,
-            last_price: parseFloat(rawTickerMsg.c),
             last_quantity: parseFloat(rawTickerMsg.Q),
             best_bid_price: parseFloat(rawTickerMsg.b), // TODO: Swap NaN
             best_bid_quantity: parseFloat(rawTickerMsg.B),
             best_ask_price: parseFloat(rawTickerMsg.a),
             best_ask_quantity: parseFloat(rawTickerMsg.A),
-            open_price_24h: parseFloat(rawTickerMsg.o),
-            high_price_24h: parseFloat(rawTickerMsg.h),
-            low_price_24h: parseFloat(rawTickerMsg.l),
-            base_volume_24h: parseFloat(rawTickerMsg.v),
-            quote_volume_24h: parseFloat(rawTickerMsg.q),
+            open: parseFloat(rawTickerMsg.o),
+            high: parseFloat(rawTickerMsg.h),
+            low: parseFloat(rawTickerMsg.l),
+            close: parseFloat(rawTickerMsg.c),
+            volume: parseFloat(rawTickerMsg.v),
+            quoteVolume: parseFloat(rawTickerMsg.q),
           };
 
           msgCallback(tickerMsg);

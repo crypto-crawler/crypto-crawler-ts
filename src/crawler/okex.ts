@@ -352,17 +352,17 @@ export default async function crawl(
               channelType,
               timestamp: new Date(x.timestamp).getTime(),
               raw: x,
-              last_price: parseFloat(x.last),
               last_quantity: parseFloat(x.last_qty), // TODO: calcQuantity()
               best_bid_price: parseFloat(x.best_bid),
               best_bid_quantity: parseFloat(x.best_bid_size),
               best_ask_price: parseFloat(x.best_ask),
               best_ask_quantity: parseFloat(x.best_ask_size),
-              open_price_24h: parseFloat(x.open_24h),
-              high_price_24h: parseFloat(x.high_24h),
-              low_price_24h: parseFloat(x.low_24h),
-              base_volume_24h: parseFloat(x.base_volume_24h),
-              quote_volume_24h: parseFloat(x.quote_volume_24h),
+              open: parseFloat(x.open_24h),
+              high: parseFloat(x.high_24h),
+              low: parseFloat(x.low_24h),
+              close: parseFloat(x.last),
+              volume: parseFloat(x.base_volume_24h),
+              quoteVolume: parseFloat(x.quote_volume_24h),
             };
           });
 
