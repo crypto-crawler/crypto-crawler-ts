@@ -448,8 +448,7 @@ export interface IndexKlineMsg {
 export async function crawlIndex(
   pairs: readonly string[],
   rawChannel: 'Ticker' | 'Kline',
-  tickerMsgCallback = async (msg: IndexTickerMsg): Promise<void> => console.info(msg), // eslint-disable-line no-console
-  klineMsgCallback = async (msg: IndexKlineMsg): Promise<void> => console.info(msg), // eslint-disable-line no-console
+  msgCallback = async (msg: IndexTickerMsg | IndexKlineMsg): Promise<void> => console.info(msg), // eslint-disable-line no-console
 ): Promise<void> {
   assert.ok(['Ticker', 'Kline'].includes(rawChannel));
   const swapMarkets = (await fetchMarkets('OKEx', 'Swap')).filter(
@@ -510,7 +509,7 @@ export async function crawlIndex(
           timestamp: new Date(x.timestamp).getTime(),
         }));
 
-        tickerMsges.forEach((x) => tickerMsgCallback(x));
+        tickerMsges.forEach((x) => msgCallback(x));
       } else if (obj.table.startsWith('index/candle')) {
         const arr = obj.data as ReadonlyArray<{
           candle: ReadonlyArray<string>;
@@ -531,7 +530,7 @@ export async function crawlIndex(
           interval: PERIOD_NAMES[parseInt(obj.table.match(/(\d+)/)![0], 10)],
         }));
 
-        klineMsges.forEach((x) => klineMsgCallback(x));
+        klineMsges.forEach((x) => msgCallback(x));
       } else {
         debug(`Unknown table: ${obj.table}`);
       }
