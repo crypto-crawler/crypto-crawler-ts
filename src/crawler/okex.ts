@@ -447,10 +447,10 @@ export interface IndexKlineMsg {
 
 export async function crawlIndex(
   pairs: readonly string[],
-  rawChannel: 'Ticker' | 'Kline',
+  rawChannels: ReadonlyArray<'Ticker' | 'Kline'>,
   msgCallback = async (msg: IndexTickerMsg | IndexKlineMsg): Promise<void> => console.info(msg), // eslint-disable-line no-console
 ): Promise<void> {
-  assert.ok(['Ticker', 'Kline'].includes(rawChannel));
+  rawChannels.forEach((rawChannel) => ['Ticker', 'Kline'].includes(rawChannel));
   const swapMarkets = (await fetchMarkets('OKEx', 'Swap')).filter(
     (m) => m.active && pairs.includes(m.pair),
   );
@@ -465,7 +465,9 @@ export async function crawlIndex(
   const channelsKline = rawPairs.flatMap((rawPair) =>
     Object.keys(PERIOD_NAMES).map((interval) => `index/candle${interval}s:${rawPair}`),
   );
-  const channels = rawChannel === 'Ticker' ? channelsIndex : channelsKline;
+  const channels = rawChannels.flatMap((rawChannel) =>
+    rawChannel === 'Ticker' ? channelsIndex : channelsKline,
+  );
 
   connect(
     WEBSOCKET_ENDPOINT,
