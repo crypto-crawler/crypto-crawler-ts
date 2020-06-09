@@ -202,7 +202,7 @@ export default async function crawl(
   pairs: readonly string[],
   msgCallback: MsgCallback = defaultMsgCallback,
 ): Promise<void> {
-  assert.ok(['Spot', 'Futures'].includes(marketType), `Bitfinex does NOT has ${marketType} market`);
+  assert.ok(['Spot', 'Swap'].includes(marketType), `Bitfinex does NOT has ${marketType} market`);
   const [markets] = await initBeforeCrawl(EXCHANGE_NAME, pairs, marketType);
 
   const arr: { channelType: ChannelType; pair: string }[] = [];
