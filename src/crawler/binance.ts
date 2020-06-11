@@ -298,10 +298,7 @@ export default async function crawl(
             timestamp: rawTickerMsg.E,
             raw: rawTickerMsg,
             last_quantity: parseFloat(rawTickerMsg.Q),
-            best_bid_price: parseFloat(rawTickerMsg.b), // TODO: Swap NaN
-            best_bid_quantity: parseFloat(rawTickerMsg.B),
-            best_ask_price: parseFloat(rawTickerMsg.a),
-            best_ask_quantity: parseFloat(rawTickerMsg.A),
+
             open: parseFloat(rawTickerMsg.o),
             high: parseFloat(rawTickerMsg.h),
             low: parseFloat(rawTickerMsg.l),
@@ -309,6 +306,15 @@ export default async function crawl(
             volume: parseFloat(rawTickerMsg.v),
             quoteVolume: parseFloat(rawTickerMsg.q),
           };
+
+          if (marketType === 'Spot') {
+            Object.assign(tickerMsg, {
+              best_bid_price: parseFloat(rawTickerMsg.b),
+              best_bid_quantity: parseFloat(rawTickerMsg.B),
+              best_ask_price: parseFloat(rawTickerMsg.a),
+              best_ask_quantity: parseFloat(rawTickerMsg.A),
+            });
+          }
 
           msgCallback(tickerMsg);
           break;

@@ -27,10 +27,10 @@ export interface TickerMsg extends Msg {
   quoteVolume: number;
   last_quantity: number;
 
-  best_bid_price: number;
-  best_bid_quantity: number;
-  best_ask_price: number;
-  best_ask_quantity: number;
+  best_bid_price?: number;
+  best_bid_quantity?: number;
+  best_ask_price?: number;
+  best_ask_quantity?: number;
 
   open_interest?: number; // availale in Futures and Swap markets
   open_interest_quote?: number; // availale in Futures and Swap markets
