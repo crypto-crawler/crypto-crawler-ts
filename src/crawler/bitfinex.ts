@@ -175,7 +175,6 @@ function connect(
             channelType,
             timestamp: Date.now(),
             raw: ticker.serialize(),
-            last_quantity: 0,
             best_bid_price: ticker.bid,
             best_bid_quantity: ticker.bidSize,
             best_ask_price: ticker.ask,

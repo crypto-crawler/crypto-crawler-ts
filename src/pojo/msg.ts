@@ -25,7 +25,8 @@ export interface TickerMsg extends Msg {
   volume: number;
 
   quoteVolume: number;
-  last_quantity: number;
+
+  last_quantity?: number;
 
   best_bid_price?: number;
   best_bid_quantity?: number;

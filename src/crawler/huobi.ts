@@ -2,7 +2,7 @@ import { strict as assert } from 'assert';
 import { Market, MarketType } from 'crypto-markets';
 import Pako from 'pako';
 import { ChannelType } from '../pojo/channel_type';
-import { BboMsg, KlineMsg, OrderBookMsg, TradeMsg } from '../pojo/msg';
+import { BboMsg, KlineMsg, OrderBookMsg, TickerMsg, TradeMsg } from '../pojo/msg';
 import { defaultMsgCallback, MsgCallback } from './index';
 import { calcQuantity, connect, debug, getChannels, initBeforeCrawl } from './util';
 
@@ -67,6 +67,8 @@ function getChannel(
         return Object.keys(PERIOD_NAMES).map((period) => `market.${rawPair}.kline.${period}`);
       case 'OrderBook':
         return [`market.${rawPair}.depth.step0`];
+      case 'Ticker':
+        return [`market.${rawPair}.detail`];
       case 'Trade':
         return [`market.${rawPair}.trade.detail`];
       default:
@@ -92,6 +94,9 @@ function getChannelType(channel: string): ChannelType {
       break;
     case 'trade':
       result = 'Trade';
+      break;
+    case 'detail':
+      result = 'Ticker';
       break;
     default:
       throw Error(`Unknown channel: ${channel}`);
@@ -322,6 +327,41 @@ export default async function crawl(
             orderBookMsg.asks = rawOrderBookMsg.asks.map((x) => parse(x));
             orderBookMsg.bids = rawOrderBookMsg.bids.map((x) => parse(x));
             msgCallback(orderBookMsg);
+            break;
+          }
+          case 'Ticker': {
+            const rawTickerMsg = rawMsg.tick as {
+              amount: number;
+              open: number;
+              close: number;
+              high: number;
+              ts: number;
+              id: number;
+              count: number;
+              low: number;
+              vol: number;
+            };
+            const rawPair = rawMsg.ch.split('.')[1];
+            const market =
+              marketType === 'Futures' ? marketMapFutures.get(rawPair)! : marketMap.get(rawPair)!;
+            const tickerMsg: TickerMsg = {
+              exchange: EXCHANGE_NAME,
+              marketType,
+              pair: market.pair,
+              rawPair: market.id,
+              channel: rawMsg.ch,
+              channelType,
+              timestamp: rawTickerMsg.ts,
+              raw: rawMsg,
+              open: rawTickerMsg.open,
+              high: rawTickerMsg.open,
+              low: rawTickerMsg.low,
+              close: rawTickerMsg.close,
+              volume: rawTickerMsg.amount,
+              quoteVolume: rawTickerMsg.vol * (market.base === 'BTC' ? 100 : 10),
+            };
+
+            msgCallback(tickerMsg);
             break;
           }
           case 'Trade': {
