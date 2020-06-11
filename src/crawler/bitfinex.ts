@@ -59,6 +59,10 @@ function connect(
         default:
           throw Error(`Unknown channelType: ${channelType}`);
       }
+
+      setInterval(() => {
+        ws.send(JSON.stringify({ event: 'ping' }));
+      }, 30000); // send ping every 30 seconds
     });
   });
 
