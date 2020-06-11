@@ -18,17 +18,22 @@ export interface Msg {
 
 // 24hr rolling window ticker
 export interface TickerMsg extends Msg {
-  last_quantity: number;
-  best_bid_price: number;
-  best_bid_quantity: number;
-  best_ask_price: number;
-  best_ask_quantity: number;
   open: number;
   high: number;
   low: number;
   close: number;
   volume: number;
+
   quoteVolume: number;
+  last_quantity: number;
+
+  best_bid_price: number;
+  best_bid_quantity: number;
+  best_ask_price: number;
+  best_ask_quantity: number;
+
+  open_interest?: number; // availale in Futures and Swap markets
+  open_interest_quote?: number; // availale in Futures and Swap markets
 }
 
 export interface TradeMsg extends Msg {

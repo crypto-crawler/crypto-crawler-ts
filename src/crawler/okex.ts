@@ -333,17 +333,22 @@ export default async function crawl(
               best_bid_size: string;
               best_ask: string;
               best_ask_size: string;
+              open_interest?: string;
               open_24h: string;
               high_24h: string;
               low_24h: string;
               base_volume_24h: string;
               quote_volume_24h: string;
+              volume_24h: string; // available in Futures and Swap
+              volume_token_24h: string; // available in Futures and Swap
               timestamp: string;
             }>;
           };
 
           const tickerMsges: TickerMsg[] = rawTickerMsg.data.map((x) => {
-            return {
+            const market = marketMap.get(x.instrument_id)!;
+
+            const ticker: TickerMsg = {
               exchange: EXCHANGE_NAME,
               marketType,
               pair: marketMap.get(x.instrument_id)!.pair,
@@ -352,7 +357,7 @@ export default async function crawl(
               channelType,
               timestamp: new Date(x.timestamp).getTime(),
               raw: x,
-              last_quantity: parseFloat(x.last_qty), // TODO: calcQuantity()
+              last_quantity: calcQuantity(market, parseFloat(x.last_qty), parseFloat(x.last)),
               best_bid_price: parseFloat(x.best_bid),
               best_bid_quantity: parseFloat(x.best_bid_size),
               best_ask_price: parseFloat(x.best_ask),
@@ -364,6 +369,14 @@ export default async function crawl(
               volume: parseFloat(x.base_volume_24h),
               quoteVolume: parseFloat(x.quote_volume_24h),
             };
+
+            if (ticker.marketType === 'Futures' || ticker.marketType === 'Swap') {
+              ticker.open_interest = parseFloat(x.open_interest!);
+              ticker.volume = parseFloat(x.volume_token_24h);
+              ticker.quoteVolume = parseFloat(x.volume_24h);
+            }
+
+            return ticker;
           });
 
           tickerMsges.forEach((x) => msgCallback(x));
