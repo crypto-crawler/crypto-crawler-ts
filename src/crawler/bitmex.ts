@@ -436,3 +436,17 @@ export default async function crawl(
     await new Promise((resolve) => setTimeout(resolve, subscriptions.length * 2000)); // send one subscription per 2 seconds
   }
 }
+
+export async function crawlInstrument(
+  // eslint-disable-next-line no-console
+  msgCallback: (msg: string) => Promise<void> = async (msg) => console.info(msg),
+): Promise<void> {
+  connect(
+    WEBSOCKET_ENDPOINT,
+    async (data) => {
+      const raw = data as string;
+      msgCallback(raw);
+    },
+    [{ op: 'subscribe', args: ['instrument'] }],
+  );
+}
