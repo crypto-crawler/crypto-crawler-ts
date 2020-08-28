@@ -432,6 +432,41 @@ export default async function crawl(
 
 // *********************** Misc ***********************
 
+export async function crawlRaw(
+  channels: readonly string[],
+  msgCallback = async (msg: {
+    table: string;
+    data: readonly Record<string, unknown>[];
+  }): Promise<void> => console.info(msg), // eslint-disable-line no-console
+): Promise<void> {
+  assert.ok(channels.length > 0);
+
+  connect(
+    WEBSOCKET_ENDPOINT,
+    async (data) => {
+      const raw = Pako.inflateRaw(data as pako.Data, { to: 'string' });
+      const obj = JSON.parse(raw) as {
+        event?: string;
+        table: string;
+        data: readonly Record<string, unknown>[];
+      };
+      if (obj.event === 'error') {
+        debug(obj);
+        process.exit(-1); // fail fast
+      } else if (obj.event === 'subscribe') {
+        debug(obj);
+        return;
+      }
+      if (!(obj.table && obj.data)) {
+        debug(obj);
+        return;
+      }
+      msgCallback(obj);
+    },
+    [{ op: 'subscribe', args: channels }],
+  );
+}
+
 export interface IndexTickerMsg {
   exchange: string;
   pair: string;
@@ -482,74 +517,52 @@ export async function crawlIndex(
     rawChannel === 'Ticker' ? channelsIndex : channelsKline,
   );
 
-  connect(
-    WEBSOCKET_ENDPOINT,
-    async (data) => {
-      const raw = Pako.inflateRaw(data as pako.Data, { to: 'string' });
-      const obj = JSON.parse(raw) as {
-        event?: string;
-        table: string;
-        data: Array<any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-      };
-      if (obj.event === 'error') {
-        debug(obj);
-        process.exit(-1); // fail fast
-      } else if (obj.event === 'subscribe') {
-        debug(obj);
-        return;
-      }
-      if (!(obj.table && obj.data)) {
-        debug(obj);
-        return;
-      }
+  crawlRaw(channels, async (obj) => {
+    if (obj.table === 'index/ticker') {
+      const arr = obj.data as ReadonlyArray<{
+        last: string;
+        open_24h: string;
+        high_24h: string;
+        low_24h: string;
+        instrument_id: string;
+        timestamp: string;
+      }>;
+      const tickerMsges: IndexTickerMsg[] = arr.map((x) => ({
+        exchange: 'OKEx',
+        pair: x.instrument_id.replace('-', '_'),
+        channel: obj.table,
+        last: parseFloat(x.last),
+        open_24h: parseFloat(x.open_24h),
+        high_24h: parseFloat(x.high_24h),
+        low_24h: parseFloat(x.low_24h),
+        instrument_id: x.instrument_id,
+        timestamp: new Date(x.timestamp).getTime(),
+      }));
 
-      if (obj.table === 'index/ticker') {
-        const arr = obj.data as ReadonlyArray<{
-          last: string;
-          open_24h: string;
-          high_24h: string;
-          low_24h: string;
-          instrument_id: string;
-          timestamp: string;
-        }>;
-        const tickerMsges: IndexTickerMsg[] = arr.map((x) => ({
-          exchange: 'OKEx',
-          pair: x.instrument_id.replace('-', '_'),
-          channel: obj.table,
-          last: parseFloat(x.last),
-          open_24h: parseFloat(x.open_24h),
-          high_24h: parseFloat(x.high_24h),
-          low_24h: parseFloat(x.low_24h),
-          instrument_id: x.instrument_id,
-          timestamp: new Date(x.timestamp).getTime(),
-        }));
+      tickerMsges.forEach((x) => msgCallback(x));
+    } else if (obj.table.startsWith('index/candle')) {
+      const arr = obj.data as ReadonlyArray<{
+        candle: ReadonlyArray<string>;
+        instrument_id: string;
+      }>;
 
-        tickerMsges.forEach((x) => msgCallback(x));
-      } else if (obj.table.startsWith('index/candle')) {
-        const arr = obj.data as ReadonlyArray<{
-          candle: ReadonlyArray<string>;
-          instrument_id: string;
-        }>;
+      const klineMsges: IndexKlineMsg[] = arr.map((x) => ({
+        exchange: 'OKEx',
+        pair: x.instrument_id.replace('-', '_'),
+        instrument_id: x.instrument_id,
+        channel: obj.table,
+        timestamp: new Date(x.candle[0]).getTime(),
+        open: parseFloat(x.candle[1]),
+        high: parseFloat(x.candle[2]),
+        low: parseFloat(x.candle[3]),
+        close: parseFloat(x.candle[4]),
+        volume: parseFloat(x.candle[5]),
+        interval: PERIOD_NAMES[parseInt(obj.table.match(/(\d+)/)![0], 10)],
+      }));
 
-        const klineMsges: IndexKlineMsg[] = arr.map((x) => ({
-          exchange: 'OKEx',
-          pair: x.instrument_id.replace('-', '_'),
-          instrument_id: x.instrument_id,
-          channel: obj.table,
-          timestamp: new Date(x.candle[0]).getTime(),
-          open: parseFloat(x.candle[1]),
-          high: parseFloat(x.candle[2]),
-          low: parseFloat(x.candle[3]),
-          close: parseFloat(x.candle[4]),
-          volume: parseFloat(x.candle[5]),
-          interval: PERIOD_NAMES[parseInt(obj.table.match(/(\d+)/)![0], 10)],
-        }));
-
-        klineMsges.forEach((x) => msgCallback(x));
-      } else {
-        debug(`Unknown table: ${obj.table}`);
-      }
-    },
-    [{ op: 'subscribe', args: channels }],
-  );
+      klineMsges.forEach((x) => msgCallback(x));
+    } else {
+      debug(`Unknown table: ${obj.table}`);
+    }
+  });
 }
