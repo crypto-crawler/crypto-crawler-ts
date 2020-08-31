@@ -14,10 +14,10 @@ export function getChannels(
   pairs: readonly string[],
   markets: readonly Market[],
   getChannel: (
-    marketType: MarketType,
-    channeltype: ChannelType,
+    marketType: MarketType, // eslint-disable-line no-shadow
+    channeltype: ChannelType, // eslint-disable-line no-shadow
     pair: string,
-    markets: readonly Market[],
+    markets: readonly Market[], // eslint-disable-line no-shadow
   ) => readonly string[],
 ): readonly string[] {
   const channels: string[] = [];
