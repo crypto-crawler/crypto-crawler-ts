@@ -351,7 +351,7 @@ export default async function crawl(
               rawPair: market.id,
               channel: rawMsg.ch,
               channelType,
-              timestamp: rawTickerMsg.ts,
+              timestamp: rawMsg.ts,
               raw: rawMsg,
               open: rawTickerMsg.open,
               high: rawTickerMsg.open,
