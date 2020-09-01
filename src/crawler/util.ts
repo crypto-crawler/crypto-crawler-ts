@@ -47,12 +47,6 @@ export function connect(
         websocket.send(JSON.stringify(x));
       });
     }
-
-    if (url.includes('.binance.com')) {
-      setInterval(() => {
-        websocket.send(JSON.stringify({ method: 'PONG', E: Date.now() }));
-      }, 180000); // send ping every 3 minutes
-    }
   });
 
   websocket.on('message', (data) => {
