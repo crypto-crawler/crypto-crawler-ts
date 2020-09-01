@@ -274,6 +274,10 @@ export default async function crawl(
               period: PERIOD_NAMES[parseInt(rawKlineMsg.table.match(/(\d+)/)![0], 10)],
             };
 
+            if (market.base === 'USD' || market.base === 'USDT') {
+              klineMsg.quoteVolume = klineMsg.volume * klineMsg.close;
+            }
+
             msgCallback(klineMsg);
           });
 
