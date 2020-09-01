@@ -240,6 +240,8 @@ export default async function crawl(
             };
           };
 
+          if (!rawKlineMsg.k.x) break;
+
           const klineMsg: KlineMsg = {
             exchange: EXCHANGE_NAME,
             marketType,
