@@ -20,7 +20,7 @@ const PERIOD_NAMES: { [key: string]: string } = {
   '3m': '3m',
   '5m': '5m',
   '15m': '15m',
-  '30m': '30m',
+  // '30m': '30m',
   // '1h': '1H',
   // '2h': '2H',
   // '4h': '4H',
