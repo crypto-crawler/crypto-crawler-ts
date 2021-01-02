@@ -339,7 +339,6 @@ export default async function crawl(
 
               // The field size has different meanings
               if (market.type === 'Swap') {
-                assert.equal(market.quote, 'USD');
                 if (market.base === 'BTC') {
                   assert.equal(rawTradeMsg.size, rawTradeMsg.foreignNotional);
                 }
