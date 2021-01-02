@@ -437,15 +437,24 @@ export default async function crawl(
   }
 }
 
+export interface InstrumentMsg {
+  exchange: string;
+  timestamp: number;
+  table: string;
+  action: string;
+  data: { symbol: string; openInterest: number; openValue: number; timestamp: string };
+}
+
 export async function crawlInstrument(
   // eslint-disable-next-line no-console
-  msgCallback: (msg: string) => Promise<void> = async (msg) => console.info(msg),
+  msgCallback: (msg: InstrumentMsg) => Promise<void> = async (msg) => console.info(msg),
 ): Promise<void> {
   connect(
     WEBSOCKET_ENDPOINT,
     async (data) => {
       const raw = data as string;
-      msgCallback(raw);
+      const msg = JSON.parse(raw) as InstrumentMsg;
+      msgCallback(msg);
     },
     [{ op: 'subscribe', args: ['instrument'] }],
   );
