@@ -347,7 +347,7 @@ export default async function crawl(
                 if (market.base === 'BTC') {
                   assert.equal(rawTradeMsg.size, rawTradeMsg.foreignNotional);
                 } else if (market.id !== 'ETHUSDM20') {
-                  assert.equal(rawTradeMsg.homeNotional, rawTradeMsg.size);
+                  // assert.equal(rawTradeMsg.homeNotional, rawTradeMsg.size); // TODO: figure out fields meanings
                 }
               }
 
