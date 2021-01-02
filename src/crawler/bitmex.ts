@@ -454,6 +454,7 @@ export async function crawlInstrument(
     async (data) => {
       const raw = data as string;
       const msg = JSON.parse(raw) as InstrumentMsg;
+      msg.timestamp = Date.now();
       msgCallback(msg);
     },
     [{ op: 'subscribe', args: ['instrument'] }],
