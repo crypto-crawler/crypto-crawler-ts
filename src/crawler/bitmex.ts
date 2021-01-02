@@ -322,10 +322,7 @@ export default async function crawl(
               assert.ok(market);
 
               const quantity = rawTradeMsg.homeNotional;
-              // rawTradeMsg.foreignNotional === quantity * rawTradeMsg.price
-              assert.ok(
-                Math.abs(1 - rawTradeMsg.foreignNotional / (quantity * rawTradeMsg.price)) < 0.0001,
-              );
+              // assert.ok(rawTradeMsg.foreignNotional === quantity * rawTradeMsg.price); // diff actually exists
 
               // Check the grossValue field
               if (market.base === 'BTC' || market.quote === 'BTC') {
