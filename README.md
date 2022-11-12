@@ -1,5 +1,7 @@
 # crypto-crawler
 
+**This project is deprecated in favor of [crypto-crawler-rs](https://github.com/crypto-crawler/crypto-crawler-rs)**
+
 Crawl orderbook and trade messages from crypto exchanges.
 
 ## How to use
